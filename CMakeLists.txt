@@ -20,7 +20,7 @@ file(GLOB header_files "${include_dir}/*.h")
 include_directories(${include_dir})
 
 # Create the executable target
-add_executable(SFML_CHESS ${source_files} ${header_files} "src/Tile.cpp" "include/Tile.h" "include/Piece.h" "include/View.h" "src/View.cpp" "include/Controller.h" "src/Controller.cpp")
+add_executable(SFML_CHESS ${source_files} ${header_files})
 add_compile_definitions(RESOURCE="${CMAKE_BINARY_DIR}/bin/res")
 
 # Link libraries based on the build configuration and system
@@ -43,11 +43,11 @@ endif()
 
 # Set the output directory for the executable
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
-file(COPY res DESTINATION ${CMAKE_BINARY_DIR}/bin)
+file(COPY ${CMAKE_SOURCE_DIR}/res DESTINATION ${CMAKE_BINARY_DIR}/bin)
 
 # Copy SFML DLLs to the output directory (Windows)
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  add_custom_command(TARGET SFML_CHESS POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_directory
-          ${CMAKE_SOURCE_DIR}/bin $<TARGET_FILE_DIR:SFML_CHESS>)
+    add_custom_command(TARGET SFML_CHESS POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/bin $<TARGET_FILE_DIR:SFML_CHESS>)
 endif()

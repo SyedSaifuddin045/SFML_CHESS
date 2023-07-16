@@ -1,62 +1,47 @@
 #include <Controller.h>
-#include <iostream>
+#include <Log.h>
 
 Controller::Controller(int height, int width, const sf::String& title)
-	:view(sf::VideoMode(width, height), title)
+	:view(sf::VideoMode(width, height), title), model()
 {
-	InitializeBoard();
 }
 
 void Controller::RunGame()
 {
-	view.Display(this->Board);
+	sf::RenderWindow& window = view.getWindow();
+	window.setView(view.getView());
+
+	while (window.isOpen())
+	{
+		sf::Event event;
+		while (window.pollEvent(event))
+		{
+			if (event.type == sf::Event::Closed)
+				window.close();
+			break;
+			if (event.type == sf::Event::Resized)
+				view.ReSizeView();
+			break;
+		}
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+		{
+			sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+			sf::Vector2f worldMousePosition = window.mapPixelToCoords(mousePosition, view.getView());
+
+			// Convert world coordinates to grid indices
+			int columnIndex = static_cast<int>(worldMousePosition.x / model.tile_size);
+			int rowIndex = static_cast<int>(worldMousePosition.y / model.tile_size);
+
+			Piece clickedPiece = model.getBoard()[rowIndex][columnIndex].getPiece();
+			std::cout << static_cast<int>(clickedPiece.getPieceType()) << std::endl;
+			clickedPiece.setApplyShader(true);
+		}
+		window.clear();
+		view.Display(model.getBoard());
+		window.display();
+	}
 }
 
 Controller::~Controller()
 {
-}
-
-void Controller::InitializeBoard()
-{
-	float tileSize = 80.0f;
-
-	if (!this->WhiteTexture.loadFromFile(RESOURCE "/textures/square/Light_Square.png"))
-	{
-		std::cout << "Failed to load White texture!" << std::endl;
-	}
-
-	//std::cout << "White texture size: " << WhiteTexture.getSize().x << "," << WhiteTexture.getSize().y << std::endl;
-
-	if (!this->BlackTexture.loadFromFile(RESOURCE "/textures/square/Dark_Square.png"))
-	{
-		std::cout << "Failed to load Black texture!" << std::endl;
-	}
-
-	//std::cout << "Black texture size: " << BlackTexture.getSize().x << "," << BlackTexture.getSize().y << std::endl;
-
-	float Xpos = 0.0f;
-	float Ypos = 0.0f;
-	for (int i = 0; i < rows; i++)
-	{
-		std::vector<Tile> rowTiles;
-		for (int j = 0; j < cols; j++)
-		{
-			if ((i + j) % 2 == 0)
-			{
-				// White Tile
-				Tile white(sf::Vector2f(tileSize, tileSize), WhiteTexture, sf::Vector2f(Xpos, Ypos));
-				rowTiles.push_back(white);
-			}
-			else
-			{
-				// Black Tile
-				Tile black(sf::Vector2f(tileSize, tileSize), BlackTexture, sf::Vector2f(Xpos, Ypos));
-				rowTiles.push_back(black);
-			}
-			Xpos += tileSize;
-		}
-		this->Board.push_back(rowTiles);
-		Xpos = 0.0f;
-		Ypos += tileSize;
-	}
 }
