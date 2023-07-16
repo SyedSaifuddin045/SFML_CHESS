@@ -20,7 +20,8 @@ file(GLOB header_files "${include_dir}/*.h")
 include_directories(${include_dir})
 
 # Create the executable target
-add_executable(SFML_CHESS ${source_files} ${header_files} "src/Square.cpp" "include/Square.h" "include/Piece.h" "include/View.h" "src/View.cpp" "include/Controller.h" "src/Controller.cpp")
+add_executable(SFML_CHESS ${source_files} ${header_files} "src/Tile.cpp" "include/Tile.h" "include/Piece.h" "include/View.h" "src/View.cpp" "include/Controller.h" "src/Controller.cpp")
+add_compile_definitions(RESOURCE="${CMAKE_BINARY_DIR}/bin/res")
 
 # Link libraries based on the build configuration and system
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -42,6 +43,7 @@ endif()
 
 # Set the output directory for the executable
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+file(COPY res DESTINATION ${CMAKE_BINARY_DIR}/bin)
 
 # Copy SFML DLLs to the output directory (Windows)
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")

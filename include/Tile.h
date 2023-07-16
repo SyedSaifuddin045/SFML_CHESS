@@ -3,9 +3,10 @@
 
 #include <Piece.h>
 
-class Square {
+class Tile {
 public:
-	Square(sf::Vector2f size,sf::Texture* texture);
+	Tile(sf::Vector2f size,sf::Texture& texture, sf::Vector2f Position);
+	void Render(sf::RenderWindow& window);
 private:
 	sf::RectangleShape m_body;
 	Piece piece;

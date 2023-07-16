@@ -2,7 +2,7 @@
 
 int main()
 {
-    Controller controller(640, 640, "SFML CHESS");
-    controller.RunGame();
+    Controller gameController(640, 640, "SFML CHESS");
+    gameController.RunGame();
     return 0;
 }

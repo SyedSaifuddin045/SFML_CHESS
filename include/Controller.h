@@ -1,17 +1,22 @@
 #pragma once
 #include <vector>
 
-#include <Square.h>
+#include <Tile.h>
 #include <View.h>
+
+constexpr auto rows = 8;
+constexpr auto cols = 8;
 
 class  Controller
 {
 public:
-	Controller(int height,int width,const sf::String& title);
+	Controller(int height, int width, const sf::String& title);
 	void RunGame();
-	~ Controller();
-
+	~Controller();
+	void InitializeBoard();
 private:
-	std::vector<Square> Board;
+	std::vector<std::vector<Tile>> Board;
+	sf::Texture WhiteTexture;
+	sf::Texture BlackTexture;
 	View view;
 };
