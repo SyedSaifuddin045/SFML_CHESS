@@ -27,7 +27,7 @@ void Tile::setPiece(const Piece& p)
 	this->piece.setPosition(p_Body.getPosition());
 }
 
-Piece Tile::getPiece()
+Piece& Tile::getPiece()
 {
 	return this->piece;
 }

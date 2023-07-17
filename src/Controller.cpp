@@ -32,9 +32,7 @@ void Controller::RunGame()
 			int columnIndex = static_cast<int>(worldMousePosition.x / model.tile_size);
 			int rowIndex = static_cast<int>(worldMousePosition.y / model.tile_size);
 
-			Piece clickedPiece = model.getBoard()[rowIndex][columnIndex].getPiece();
-			std::cout << static_cast<int>(clickedPiece.getPieceType()) << std::endl;
-			clickedPiece.setApplyShader(true);
+			model.getBoard()[rowIndex][columnIndex].getPiece().setApplyShader(true);
 		}
 		window.clear();
 		view.Display(model.getBoard());

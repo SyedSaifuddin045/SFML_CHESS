@@ -17,11 +17,12 @@ public:
 	void setPosition(sf::Vector2f Position);
 	sf::RectangleShape& getBody();
 	bool getApplyShader() { return p_applyShader; }
-	void setApplyShader(bool b) { p_applyShader = b; }
+	void setApplyShader(bool b);
 private:
 	sf::RectangleShape p_Body;
 	std::shared_ptr<sf::Texture> p_Texture;
 	Piece_Type p_Type;
+	std::shared_ptr<sf::Shader> shader;
 	bool p_applyShader;
 };
 
@@ -29,7 +30,7 @@ class PieceFactory {
 public:
 	static Piece CreatePiece(Piece_Type p_type, const sf::String& color)
 	{
-		sf::Vector2f size = sf::Vector2f(80.0f, 80.0f);
+		sf::Vector2f size = sf::Vector2f(70.0f, 70.0f);
 		std::shared_ptr<sf::Texture> texture = std::make_shared<sf::Texture>();
 
 		switch (p_type)

@@ -4,21 +4,37 @@
 Piece::Piece(sf::Vector2f size, std::shared_ptr<sf::Texture> texture, Piece_Type p_type)
 	: p_Body(size), p_Texture(texture), p_Type(p_type)
 {
-	p_Body.setTexture(p_Texture.get());
-	setApplyShader(false);
+	this->p_Body.setTexture(p_Texture.get());
+	p_applyShader = false;
+	shader = std::make_shared<sf::Shader>();
 }
 
 Piece::Piece()
 {
 	p_Type = Piece_Type::Null;
+	p_applyShader = false;
+}
+
+void Piece::setApplyShader(bool b)
+{
+	this->p_applyShader = b;
+
+	if (!shader->loadFromFile(RESOURCE "/shaders/fresnel.frag", sf::Shader::Fragment))
+	{
+		// Failed to load shader
+		std::cout << "Failed to load shader" << std::endl;
+	}
+	shader->setUniform("edgeColor", sf::Glsl::Vec4(1.0f, 1.0f, 0.0f, 0.8f));    // Set the highlight color
+	shader->setUniform("textureSize", sf::Glsl::Vec2(256.0f,256.0f));
+	shader->setUniform("boundaryWidth", 2.00f);
+	shader->setUniform("textureSampler", sf::Shader::CurrentTexture);
 }
 
 void Piece::Render(sf::RenderWindow& window)
 {
-	if (p_applyShader)
+	if (this->p_applyShader == true)
 	{
-		std::cout << "Rendering with shader" << std::endl;
-		window.draw(this->p_Body);
+		window.draw(this->p_Body, shader.get());
 	}
 	else
 	{

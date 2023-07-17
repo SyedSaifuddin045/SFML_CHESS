@@ -8,7 +8,7 @@ public:
     GameModel();
     std::pair<Piece_Type,sf::String> GetPieceForPosiition(int row, int col);
     void InitializeBoard();
-    std::vector<std::vector<Tile>> getBoard() { return Board; }
+    std::vector<std::vector<Tile>>& getBoard() { return this->Board; }
 public:
     const int rows = 8;
     const int cols = 8;
