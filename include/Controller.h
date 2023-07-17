@@ -6,6 +6,7 @@ class  Controller
 {
 public:
 	Controller(int height, int width, const sf::String& title);
+	void TogglePieceAt(sf::Vector2i mousePosition);
 	~Controller();
 	void RunGame();
 private:

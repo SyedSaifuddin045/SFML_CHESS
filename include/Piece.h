@@ -16,14 +16,16 @@ public:
 	Piece_Type getPieceType();
 	void setPosition(sf::Vector2f Position);
 	sf::RectangleShape& getBody();
-	bool getApplyShader() { return p_applyShader; }
-	void setApplyShader(bool b);
+	void DeselectPiece();
+	bool isPieceSelected() { return p_Selected; }
+	void setPieceSelected(bool b);
+	void pieceToggleSelection();
 private:
 	sf::RectangleShape p_Body;
 	std::shared_ptr<sf::Texture> p_Texture;
 	Piece_Type p_Type;
 	std::shared_ptr<sf::Shader> shader;
-	bool p_applyShader;
+	bool p_Selected;
 };
 
 class PieceFactory {
