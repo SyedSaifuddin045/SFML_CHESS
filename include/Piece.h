@@ -1,78 +1,118 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <memory>
+
 #include <Log.h>
 
-enum class Piece_Type
+namespace Global
 {
-	Null, Pyada, Haanthi, Ghoda, Unth, Wazir, Raaja
-};
+	enum class Piece_Type
+	{
+		Null, Pyada, Haanthi, Ghoda, Unth, Wazir, Raaja
+	};
+
+	enum class Color {
+		null,black, white
+	};
+
+	static Piece_Type PieceTypeFromString(const std::string& str)
+	{
+
+		if (str.empty() || str == "Null")
+			return Piece_Type::Null;
+		else if (str == "Pyada")
+			return Piece_Type::Pyada;
+		else if (str == "Haanthi")
+			return Piece_Type::Haanthi;
+		else if (str == "Ghoda")
+			return Piece_Type::Ghoda;
+		else if (str == "Unth")
+			return Piece_Type::Unth;
+		else if (str == "Wazir")
+			return Piece_Type::Wazir;
+		else if (str == "Raaja")
+			return Piece_Type::Raaja;
+	}
+
+	static std::string GetStringFromPieceType(Piece_Type pType)
+	{
+		switch (pType)
+		{
+		case Global::Piece_Type::Pyada:
+			return "Pyada";
+			break;
+		case Global::Piece_Type::Haanthi:
+			return "Haanthi";
+			break;
+		case Global::Piece_Type::Ghoda:
+			return "Ghoda";
+			break;
+		case Global::Piece_Type::Unth:
+			return "Unth";
+			break;
+		case Global::Piece_Type::Wazir:
+			return "Wazir";
+			break;
+		case Global::Piece_Type::Raaja:
+			return "Raaja";
+			break;
+		case Global::Piece_Type::Null:
+		default:
+			return "Null";
+			break;
+		}
+	}
+
+	static std::string GetStringFromColor(Color color)
+	{
+		switch (color)
+		{
+		case Global::Color::black:
+			return "black";
+			break;
+		case Global::Color::white:
+			return "white";
+			break;
+		case Global::Color::null:
+		default:
+			return "";
+			break;
+		}
+	}
+
+	static Color GetColorFromString(const std::string str)
+	{
+		if (str.empty())
+			return Color::null;
+		if (str == "white")
+			return Color::white;
+		if (str == "black")
+			return Color::black;
+	}
+}
 
 class Piece {
 public:
-	Piece(sf::Vector2f size, std::shared_ptr<sf::Texture> texture, Piece_Type p_type);
+	Piece(sf::Vector2f size, std::shared_ptr<sf::Texture>& texture, Global::Piece_Type p_type,Global::Color color);
 	Piece();
 	void Render(sf::RenderWindow& window);
-	Piece_Type getPieceType();
-	void setPosition(sf::Vector2f Position);
+
+	//Getter and Setter
 	sf::RectangleShape& getBody();
-	void DeselectPiece();
+	Global::Piece_Type getPieceType();
+	Global::Color getPieceColor();
 	bool isPieceSelected() { return p_Selected; }
 	void setPieceSelected(bool b);
+	void setPosition(sf::Vector2f Position);
+
+	void DeselectPiece();
 	void pieceToggleSelection();
 private:
 	sf::RectangleShape p_Body;
 	std::shared_ptr<sf::Texture> p_Texture;
-	Piece_Type p_Type;
 	std::shared_ptr<sf::Shader> shader;
+
+	Global::Piece_Type p_Type;
+	Global::Color p_Color;
 	bool p_Selected;
-};
-
-class PieceFactory {
-public:
-	static Piece CreatePiece(Piece_Type p_type, const sf::String& color)
-	{
-		sf::Vector2f size = sf::Vector2f(70.0f, 70.0f);
-		std::shared_ptr<sf::Texture> texture = std::make_shared<sf::Texture>();
-
-		switch (p_type)
-		{
-		case Piece_Type::Pyada:
-			if (!texture->loadFromFile(RESOURCE "/textures/" + color + "/Pyada.png"))
-				std::cout << "Failed to load " << color.toAnsiString() << " Pyada texture." << std::endl;
-			break;
-
-		case Piece_Type::Haanthi:
-			if (!texture->loadFromFile(RESOURCE "/textures/" + color + "/Haanthi.png"))
-				std::cout << "Failed to load " << color.toAnsiString() << " Haanthi texture." << std::endl;
-			break;
-
-		case Piece_Type::Ghoda:
-			if (!texture->loadFromFile(RESOURCE "/textures/" + color + "/Ghoda.png"))
-				std::cout << "Failed to load " << color.toAnsiString() << " Ghoda texture." << std::endl;
-			break;
-
-		case Piece_Type::Unth:
-			if (!texture->loadFromFile(RESOURCE "/textures/" + color + "/Unth.png"))
-				std::cout << "Failed to load " << color.toAnsiString() << " Unth texture." << std::endl;
-			break;
-
-		case Piece_Type::Wazir:
-			if (!texture->loadFromFile(RESOURCE "/textures/" + color + "/Wazir.png"))
-				std::cout << "Failed to load " << color.toAnsiString() << " Wazir texture." << std::endl;
-			break;
-
-		case Piece_Type::Raaja:
-			if (!texture->loadFromFile(RESOURCE "/textures/" + color + "/Raaja.png"))
-				std::cout << "Failed to load " << color.toAnsiString() << " Raaja texture." << std::endl;
-			break;
-
-		default:
-		case Piece_Type::Null:
-			return Piece();
-			break;
-		}
-		texture.get()->setSmooth(true);
-		return Piece(size, texture, p_type);
-	}
 };

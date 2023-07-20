@@ -2,19 +2,37 @@
 #include <vector>
 #include <memory>
 #include <Tile.h>
+#include <PieceFactory.h>
 
+
+namespace std {
+    template<>
+    struct hash<sf::Vector2i>
+    {
+        size_t operator()(const sf::Vector2i& key)const
+        {
+            return hash<int>()(key.x) ^ hash<int>()(key.y);
+        }
+    };
+}
 class GameModel {
 public:
     GameModel();
-    std::pair<Piece_Type,sf::String> GetPieceForPosiition(int row, int col);
+    std::pair<Global::Piece_Type,Global::Color> GetPieceForPosiition(int row, int col);
     void InitializeBoard();
     std::vector<std::vector<Tile>>& getBoard() { return this->Board; }
+    bool isOccupied(sf::Vector2i position);
+    bool isPositionOccupiedByEnemy(sf::Vector2i position, Global::Color ourColor);
 public:
     const int rows = 8;
     const int cols = 8;
     const float tile_size = 80.0f;
-private:
-    std::vector<std::vector<Tile>> Board;
+
     std::shared_ptr<sf::Texture> WhiteTexture;
     std::shared_ptr<sf::Texture> BlackTexture;
+    std::shared_ptr<sf::Texture> WhiteHighlightTexture;
+    std::shared_ptr<sf::Texture> BlackHighlightTexture;
+private:
+    std::vector<std::vector<Tile>> Board;
+    std::unordered_map<sf::Vector2i, Piece*> positionsOccupiedOnBoard;
 };

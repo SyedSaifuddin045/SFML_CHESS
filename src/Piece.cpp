@@ -1,18 +1,19 @@
 #include "Piece.h"
 #include <Log.h>
 
-Piece::Piece(sf::Vector2f size, std::shared_ptr<sf::Texture> texture, Piece_Type p_type)
+Piece::Piece(sf::Vector2f size, std::shared_ptr<sf::Texture>& texture, Global::Piece_Type p_type,Global::Color color)
 	: p_Body(size), p_Texture(texture), p_Type(p_type)
 {
 	this->p_Body.setTexture(p_Texture.get());
-	p_Selected = false;
 	shader = std::make_shared<sf::Shader>();
+	p_Selected = false;
+	p_Color = color;
 }
 
 Piece::Piece()
 {
-	p_Type = Piece_Type::Null;
-	p_Selected = false;
+	p_Type = Global::Piece_Type::Null;
+	shader = std::make_shared<sf::Shader>();
 }
 
 void Piece::setPieceSelected(bool b)
@@ -24,7 +25,7 @@ void Piece::setPieceSelected(bool b)
 		if (!shader->loadFromFile(RESOURCE "/shaders/fresnel.frag", sf::Shader::Fragment))
 		{
 			// Failed to load shader
-			std::cout << "Failed to load shader" << std::endl;
+			std::cout << "Failed to load piece highlight shader" << std::endl;
 		}
 		shader->setUniform("edgeColor", sf::Glsl::Vec4(1.0f, 1.0f, 0.0f, 0.8f));    // Set the highlight color
 		shader->setUniform("textureSize", sf::Glsl::Vec2(256.0f, 256.0f));
@@ -41,6 +42,11 @@ void Piece::pieceToggleSelection()
 		setPieceSelected(true);
 }
 
+Global::Color Piece::getPieceColor()
+{
+	return this->p_Color;
+}
+
 void Piece::Render(sf::RenderWindow& window)
 {
 	if (isPieceSelected() == true)
@@ -53,7 +59,7 @@ void Piece::Render(sf::RenderWindow& window)
 	}
 }
 
-Piece_Type Piece::getPieceType()
+Global::Piece_Type Piece::getPieceType()
 {
 	return p_Type;
 }

@@ -1,7 +1,8 @@
 uniform sampler2D textureSampler;
 uniform vec2 textureSize;
 uniform vec4 edgeColor;
-uniform float boundaryWidth;
+
+uniform float boundaryWidth; // New uniform for boundary width
 
 void main()
 {
@@ -38,14 +39,11 @@ void main()
         edgeIntensity += 1.0;
     }
     
-    // Calculate the edge width in screen space units
-    float edgeWidth = boundaryWidth * length(vec2(dFdx(texCoord), dFdy(texCoord)));
+    // Calculate the threshold based on boundary width
+    float threshold = boundaryWidth * 0.5;
     
-    // Apply the edge color based on the edge intensity and boundary width
-    vec4 highlightedColor = texColor;
-    if (edgeIntensity > 0.0 && edgeIntensity < edgeWidth) {
-        highlightedColor = edgeColor;
-    }
+    // Apply the edge color based on the edge intensity
+    vec4 highlightedColor = edgeIntensity > threshold ? edgeColor : texColor;
     
     gl_FragColor = highlightedColor;
 }
