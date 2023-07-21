@@ -4,37 +4,29 @@
 Controller::Controller(int height, int width, const sf::String& title)
 	:view(sf::VideoMode(width, height), title), model()
 {
+	lastClickedPiece = std::make_shared<Piece>();
+	lastMouseClickPosition = sf::Vector2i(-1, -1);
 }
 
-void Controller::TogglePiece(Piece& clickedPiece, sf::Vector2i pos)
+void Controller::TogglePiece(std::shared_ptr<Piece> clickedPiece, sf::Vector2i pos)
 {
-	if (lastClickedPiece != nullptr) {
-		// Deselect the previous piece
-		lastClickedPiece->DeselectPiece();
-		lastClickedPiece = nullptr;
-
-		// Reset the textures of all tiles
-		for (auto& row : model.getBoard()) {
-			for (auto& tile : row) {
-				tile.setNormalTexture();
-			}
-		}
-	}
-
-	if (clickedPiece.getPieceType() != Global::Piece_Type::Null)
+	if (clickedPiece->getPieceType() != Global::Piece_Type::Null)
 	{
-		if (!clickedPiece.isPieceSelected()) {
-			clickedPiece.pieceToggleSelection();
-			lastClickedPiece = &clickedPiece;
+		if (!clickedPiece->isPieceSelected()) {
+			clickedPiece->pieceToggleSelection();
+			lastClickedPiece = clickedPiece;
 
 			// Get available move positions for the selected piece and highlight the tiles
-			const std::vector<sf::Vector2i>& positions = GetPiecePositions(clickedPiece, pos);
-			for (auto position : positions)
+			ClickedPiecePositions = GetPiecePositions(clickedPiece, pos);
+			for (auto position : ClickedPiecePositions)
 			{
-				if ((position.x + position.y) % 2 == 0)
-					model.getBoard()[position.x][position.y].setHighlightTexture();
-				else
-					model.getBoard()[position.x][position.y].setHighlightTexture();
+				if (position.x <= 7 && position.x >= 0 && position.y <= 7 && position.y >= 0)
+				{
+					if ((position.x + position.y) % 2 == 0)
+						model.getBoard()[position.x][position.y].setHighlightTexture();
+					else
+						model.getBoard()[position.x][position.y].setHighlightTexture();
+				}
 			}
 		}
 	}
@@ -55,11 +47,60 @@ void Controller::HandleInput(sf::RenderWindow& window)
 		std::vector<std::vector<Tile>>& board = model.getBoard();
 		if (rowIndex >= 0 && rowIndex < board.size() && columnIndex >= 0 && columnIndex < board[rowIndex].size())
 		{
-			Piece& clickedPiece = board[rowIndex][columnIndex].getPiece();
-			TogglePiece(clickedPiece, sf::Vector2i(rowIndex, columnIndex));
+
+			bool retFlag;
+			PreventDuplicateClicks(rowIndex, columnIndex, retFlag);
+			if (retFlag) return;
+
+			Tile& clickedTile = board[rowIndex][columnIndex];
+			// Select the clicked piece if any
+			if (lastClickedPiece)
+			{
+				for (auto position : ClickedPiecePositions)
+				{
+					if (position == clickedTile.getGamePosition())
+					{
+						lastClickedTile->unsetPiece();
+						model.MovePiece(lastClickedPiece, clickedTile.getGamePosition());
+					}
+				}
+				ResetTiles();
+				lastClickedPiece.reset();
+			}
+			std::shared_ptr<Piece> clickedPiece = clickedTile.getPiece();
+			if (clickedPiece)
+			{
+				lastClickedTile = &clickedTile;
+				if (clickedPiece == lastClickedPiece)
+					return;
+				TogglePiece(clickedPiece, sf::Vector2i(rowIndex, columnIndex));
+			}
+
 		}
 	}
 }
+
+void Controller::ResetTiles()
+{
+	lastClickedPiece->DeselectPiece();
+	lastClickedPiece = nullptr;
+	for (auto& row : model.getBoard()) {
+		for (auto& tile : row) {
+			tile.setNormalTexture();
+		}
+	}
+}
+
+void Controller::PreventDuplicateClicks(int rowIndex, int columnIndex, bool& retFlag)
+{
+	retFlag = true;
+	if (sf::Vector2i(rowIndex, columnIndex) == lastMouseClickPosition) {
+		return; // Skip further processing for this mouse click
+	}
+	lastMouseClickPosition = sf::Vector2i(rowIndex, columnIndex);
+	retFlag = false;
+}
+
 
 void Controller::RunGame()
 {
@@ -85,12 +126,12 @@ void Controller::RunGame()
 	}
 }
 
-const std::vector<sf::Vector2i> Controller::GetPiecePositions(Piece& piece, sf::Vector2i boardPosition)
+const std::vector<sf::Vector2i> Controller::GetPiecePositions(std::shared_ptr<Piece> piece, sf::Vector2i boardPosition)
 {
 	std::vector<sf::Vector2i> availablePositions;
 
-	Global::Color color = piece.getPieceColor();
-	Global::Piece_Type p_type = piece.getPieceType();
+	Global::Color color = piece->getPieceColor();
+	Global::Piece_Type p_type = piece->getPieceType();
 	int forwardDirection = (color == Global::Color::white) ? -1 : 1;
 
 	int vertical = 0;
@@ -122,15 +163,16 @@ const std::vector<sf::Vector2i> Controller::GetPiecePositions(Piece& piece, sf::
 				vertical = 1, horizontal = 1;
 			}
 			else {
-				vertical = 1, horizontal = -1;
+				vertical = -1, horizontal = -1;
 			}
 			//For Vertical
-			for (int i = boardPosition.x; i >= 0 && i <= 7; i += vertical)
+			for (int i = boardPosition.y; i >= 0 && i <= 7;)
 			{
-				if (!model.isOccupied(sf::Vector2i(i, boardPosition.y)) || model.isPositionOccupiedByEnemy(sf::Vector2i(i, boardPosition.y), color))
+				i += vertical;
+				if (!model.isOccupied(sf::Vector2i(boardPosition.x,i)) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x,i), color))
 				{
-					availablePositions.push_back(sf::Vector2i(i, boardPosition.y));
-					if (model.isPositionOccupiedByEnemy(sf::Vector2i(i, boardPosition.y), color))
+					availablePositions.push_back(sf::Vector2i(boardPosition.x,i));
+					if (model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x,i), color))
 						break;
 				}
 				else
@@ -139,12 +181,13 @@ const std::vector<sf::Vector2i> Controller::GetPiecePositions(Piece& piece, sf::
 				}
 			}
 			//For Horizontal
-			for (int i = boardPosition.x; i >= 0 && i <= 7; i += horizontal)
+			for (int i = boardPosition.x; i >= 0 && i <= 7;)
 			{
-				if (!model.isOccupied(sf::Vector2i(boardPosition.x, i)) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x, i), color))
+				i += horizontal;
+				if (!model.isOccupied(sf::Vector2i(i, boardPosition.y)) || model.isPositionOccupiedByEnemy(sf::Vector2i(i, boardPosition.y), color))
 				{
-					availablePositions.push_back(sf::Vector2i(boardPosition.x, i));
-					if (model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x, i), color))
+					availablePositions.push_back(sf::Vector2i(i, boardPosition.y));
+					if (model.isPositionOccupiedByEnemy(sf::Vector2i(i, boardPosition.y), color))
 						break;
 				}
 				else
@@ -163,20 +206,32 @@ const std::vector<sf::Vector2i> Controller::GetPiecePositions(Piece& piece, sf::
 				if (boardPosition.x + (2 * vertical) <= 7 && boardPosition.x + (2 * vertical) >= 0)
 				{
 					if (boardPosition.y + 1 <= 7 && boardPosition.y + 1 >= 0)
-						availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y + 1));
+					{
+						if (!model.isOccupied(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y + 1)) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y + 1), color))
+							availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y + 1));
+					}
 					if (boardPosition.y - 1 <= 7 && boardPosition.y - 1 >= 0)
-						availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y - 1));
+					{
+						if (!model.isOccupied(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y - 1)) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y - 1), color))
+							availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y - 1));
+					}
 				}
 			}
 			else
 			{
-				horizontal = (i == 3) ? 1 : -1;
-				if (boardPosition.x + (2 * horizontal) <= 7 && boardPosition.x + (2 * horizontal) >= 0)
+				horizontal = (i == 1) ? 1 : -1;
+				if (boardPosition.y + (2 * horizontal) <= 7 && boardPosition.y + (2 * horizontal) >= 0)
 				{
-					if (boardPosition.y + 1 <= 7 && boardPosition.y + 1 >= 0)
-						availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * horizontal), boardPosition.y + 1));
-					if (boardPosition.y - 1 <= 7 && boardPosition.y - 1 >= 0)
-						availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * horizontal), boardPosition.y - 1));
+					if (boardPosition.x + 1 <= 7 && boardPosition.x + 1 >= 0)
+					{
+						if (!model.isOccupied(sf::Vector2i(boardPosition.x + 1, boardPosition.y + (2 * horizontal))) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x + 1, boardPosition.y + (2 * horizontal)), color))
+							availablePositions.push_back(sf::Vector2i(boardPosition.x + 1, boardPosition.y + (2 * horizontal)));
+					}
+					if (boardPosition.x - 1 <= 7 && boardPosition.x - 1 >= 0)
+					{
+						if (!model.isOccupied(sf::Vector2i(boardPosition.x - 1, boardPosition.y + (2 * horizontal))) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x - 1, boardPosition.y + (2 * horizontal)), color))
+							availablePositions.push_back(sf::Vector2i(boardPosition.x - 1, boardPosition.y + (2 * horizontal)));
+					}
 				}
 			}
 			horizontal, vertical = 0;
