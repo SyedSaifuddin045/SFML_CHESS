@@ -60,8 +60,9 @@ void GameModel::InitializeBoard()
 			Piece& currentPiece = PieceFactory::CreatePiece(p_Type_Color.first, p_Type_Color.second);
 			if (currentPiece.getPieceType() != Global::Piece_Type::Null)
 			{
-				tile.setPiece(currentPiece);
-				this->positionsOccupiedOnBoard.insert(std::make_pair(sf::Vector2i(i,j),&tile.getPiece()));
+				std::shared_ptr<Piece> currentPiecePointer = std::make_shared<Piece>(currentPiece);
+				tile.setPiece(currentPiecePointer);
+				this->positionsOccupiedOnBoard.insert(std::make_pair(sf::Vector2i(i,j),currentPiecePointer));
 			}
 			rowTiles.push_back(tile);
 			Xpos += tile_size;
@@ -96,6 +97,40 @@ bool GameModel::isPositionOccupiedByEnemy(sf::Vector2i position,Global::Color ou
 	//position not occupied by enemy
 	return false;
 }
+
+void GameModel::MovePiece(std::shared_ptr<Piece> piece, sf::Vector2i position)
+{
+	auto find = positionsOccupiedOnBoard.find(position);
+	// Removing if it is occupied by another piece (i.e., enemy)
+	if (find != positionsOccupiedOnBoard.end())
+	{
+		std::cout << "Removed new position from map" << std::endl;
+		positionsOccupiedOnBoard.erase(find);
+	}
+
+	// Removing the current position of the piece from the map using iterator
+	for (auto it = positionsOccupiedOnBoard.begin(); it != positionsOccupiedOnBoard.end();)
+	{
+		if (it->second == piece)
+		{
+			std::cout << "Removed piece from map" << std::endl;
+			it = positionsOccupiedOnBoard.erase(it); // This will return the next valid iterator after erasing the element.
+			break;
+		}
+		else
+		{
+			++it; // Move to the next element
+		}
+	}
+
+	// Setting piece to the new position tile
+	std::cout << "Successfully set new piece at the position" << std::endl;
+	Board[position.x][position.y].setPiece(piece);
+	// Adding the new position for the piece
+	std::cout << "Added the new Position with updated piece" << std::endl;
+	positionsOccupiedOnBoard.insert(std::make_pair(position, piece));
+}
+
 
 GameModel::GameModel()
 {
