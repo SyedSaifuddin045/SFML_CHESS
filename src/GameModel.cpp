@@ -49,12 +49,12 @@ void GameModel::InitializeBoard()
 			if ((i + j) % 2 == 0)
 			{
 				// White Tile
-				tile = Tile(sf::Vector2f(tile_size, tile_size), WhiteTexture, sf::Vector2f(Xpos, Ypos), sf::Vector2i(i, j));
+				tile = Tile(sf::Vector2f(tile_size, tile_size), WhiteTexture,WhiteHighlightTexture, sf::Vector2f(Xpos, Ypos), sf::Vector2i(i, j));
 			}
 			else
 			{
 				// Black Tile
-				tile = Tile(sf::Vector2f(tile_size, tile_size), BlackTexture, sf::Vector2f(Xpos, Ypos), sf::Vector2i(i, j));
+				tile = Tile(sf::Vector2f(tile_size, tile_size), BlackTexture,BlackHighlightTexture, sf::Vector2f(Xpos, Ypos), sf::Vector2i(i, j));
 			}
 			std::pair<Global::Piece_Type, Global::Color> p_Type_Color = GetPieceForPosiition(i, j);
 			Piece& currentPiece = PieceFactory::CreatePiece(p_Type_Color.first, p_Type_Color.second);

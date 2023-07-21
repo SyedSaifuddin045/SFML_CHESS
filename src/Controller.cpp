@@ -5,25 +5,41 @@ Controller::Controller(int height, int width, const sf::String& title)
 	:view(sf::VideoMode(width, height), title), model()
 {
 }
-void Controller::TogglePiece(Piece& clickedPiece)
+
+void Controller::TogglePiece(Piece& clickedPiece, sf::Vector2i pos)
 {
+	if (lastClickedPiece != nullptr) {
+		// Deselect the previous piece
+		lastClickedPiece->DeselectPiece();
+		lastClickedPiece = nullptr;
+
+		// Reset the textures of all tiles
+		for (auto& row : model.getBoard()) {
+			for (auto& tile : row) {
+				tile.setNormalTexture();
+			}
+		}
+	}
+
 	if (clickedPiece.getPieceType() != Global::Piece_Type::Null)
 	{
 		if (!clickedPiece.isPieceSelected()) {
 			clickedPiece.pieceToggleSelection();
-		}
-		else
-		{
-			// Deselect any previously selected piece
-			for (auto& row : model.getBoard()) {
-				for (auto& tile : row) {
-					tile.getPiece().DeselectPiece();
-				}
+			lastClickedPiece = &clickedPiece;
+
+			// Get available move positions for the selected piece and highlight the tiles
+			const std::vector<sf::Vector2i>& positions = GetPiecePositions(clickedPiece, pos);
+			for (auto position : positions)
+			{
+				if ((position.x + position.y) % 2 == 0)
+					model.getBoard()[position.x][position.y].setHighlightTexture();
+				else
+					model.getBoard()[position.x][position.y].setHighlightTexture();
 			}
-			clickedPiece.pieceToggleSelection();
 		}
 	}
 }
+
 
 void Controller::HandleInput(sf::RenderWindow& window)
 {
@@ -40,18 +56,11 @@ void Controller::HandleInput(sf::RenderWindow& window)
 		if (rowIndex >= 0 && rowIndex < board.size() && columnIndex >= 0 && columnIndex < board[rowIndex].size())
 		{
 			Piece& clickedPiece = board[rowIndex][columnIndex].getPiece();
-			TogglePiece(clickedPiece);
-			const std::vector<sf::Vector2i>& positions = GetPiecePositions(clickedPiece, sf::Vector2i(rowIndex, columnIndex));
-			for (auto position : positions)
-			{
-				if ((position.x + position.y) % 2 == 0)
-					board[position.x][position.y].setHighlight(model.WhiteHighlightTexture);
-				else
-					board[position.x][position.y].setHighlight(model.BlackHighlightTexture);
-			}
+			TogglePiece(clickedPiece, sf::Vector2i(rowIndex, columnIndex));
 		}
 	}
 }
+
 void Controller::RunGame()
 {
 	sf::RenderWindow& window = view.getWindow();
@@ -84,6 +93,9 @@ const std::vector<sf::Vector2i> Controller::GetPiecePositions(Piece& piece, sf::
 	Global::Piece_Type p_type = piece.getPieceType();
 	int forwardDirection = (color == Global::Color::white) ? -1 : 1;
 
+	int vertical = 0;
+	int horizontal = 0;
+
 	switch (p_type)
 	{
 	case Global::Piece_Type::Pyada:
@@ -103,8 +115,72 @@ const std::vector<sf::Vector2i> Controller::GetPiecePositions(Piece& piece, sf::
 		break;
 	}
 	case Global::Piece_Type::Haanthi:
+		for (int j = 1; j <= 2; j++)
+		{
+			if (j == 1)
+			{
+				vertical = 1, horizontal = 1;
+			}
+			else {
+				vertical = 1, horizontal = -1;
+			}
+			//For Vertical
+			for (int i = boardPosition.x; i >= 0 && i <= 7; i += vertical)
+			{
+				if (!model.isOccupied(sf::Vector2i(i, boardPosition.y)) || model.isPositionOccupiedByEnemy(sf::Vector2i(i, boardPosition.y), color))
+				{
+					availablePositions.push_back(sf::Vector2i(i, boardPosition.y));
+					if (model.isPositionOccupiedByEnemy(sf::Vector2i(i, boardPosition.y), color))
+						break;
+				}
+				else
+				{
+					break;
+				}
+			}
+			//For Horizontal
+			for (int i = boardPosition.x; i >= 0 && i <= 7; i += horizontal)
+			{
+				if (!model.isOccupied(sf::Vector2i(boardPosition.x, i)) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x, i), color))
+				{
+					availablePositions.push_back(sf::Vector2i(boardPosition.x, i));
+					if (model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x, i), color))
+						break;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
 		break;
 	case Global::Piece_Type::Ghoda:
+		for (int i = 1; i <= 4; i++)
+		{
+			if (i % 2 == 0)
+			{
+				vertical = (i == 2) ? 1 : -1;
+				if (boardPosition.x + (2 * vertical) <= 7 && boardPosition.x + (2 * vertical) >= 0)
+				{
+					if (boardPosition.y + 1 <= 7 && boardPosition.y + 1 >= 0)
+						availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y + 1));
+					if (boardPosition.y - 1 <= 7 && boardPosition.y - 1 >= 0)
+						availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y - 1));
+				}
+			}
+			else
+			{
+				horizontal = (i == 3) ? 1 : -1;
+				if (boardPosition.x + (2 * horizontal) <= 7 && boardPosition.x + (2 * horizontal) >= 0)
+				{
+					if (boardPosition.y + 1 <= 7 && boardPosition.y + 1 >= 0)
+						availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * horizontal), boardPosition.y + 1));
+					if (boardPosition.y - 1 <= 7 && boardPosition.y - 1 >= 0)
+						availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * horizontal), boardPosition.y - 1));
+				}
+			}
+			horizontal, vertical = 0;
+		}
 		break;
 	case Global::Piece_Type::Unth:
 		break;

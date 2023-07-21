@@ -6,7 +6,7 @@ class  Controller
 {
 public:
 	Controller(int height, int width, const sf::String& title);
-	void TogglePiece(Piece& clickedPiece);
+	void TogglePiece(Piece& clickedPiece,sf::Vector2i pos);
 	void HandleInput(sf::RenderWindow& window);
 	const std::vector<sf::Vector2i> GetPiecePositions(Piece& piece,sf::Vector2i boardPosition);
 	~Controller();
@@ -14,4 +14,5 @@ public:
 private:
 	GameModel model;
 	View view;
+	Piece* lastClickedPiece = nullptr;
 };

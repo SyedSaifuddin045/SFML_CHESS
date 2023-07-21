@@ -4,11 +4,12 @@ Tile::Tile()
 {
 }
 
-Tile::Tile(sf::Vector2f size, std::shared_ptr<sf::Texture> texture, sf::Vector2f position, sf::Vector2i boardPosition)
-	:t_Body(size)
+Tile::Tile(sf::Vector2f size, std::shared_ptr<sf::Texture> normalTexture, std::shared_ptr<sf::Texture> highlightTexture, sf::Vector2f Position,sf::Vector2i boardPosition)
+	: t_Body(size), normalTexture(normalTexture), highlightTexture(highlightTexture)
 {
+	t_Body.setPosition(Position);
 	t_Position = boardPosition;
-	//m_body.setOrigin(Size / 2.0f);
+	setTexture(normalTexture); // Set the normal texture initially
 }
 
 void Tile::Render(sf::RenderWindow& window)
@@ -43,7 +44,17 @@ sf::Vector2f Tile::getScreenPosition() const
 	return t_Body.getPosition();
 }
 
-void Tile::setHighlight(std::shared_ptr<sf::Texture> highlight_texture)
+void Tile::setTexture(std::shared_ptr<sf::Texture> newtexture)
 {
-	t_Body.setTexture(highlight_texture.get());
+	t_Body.setTexture(newtexture.get());
+}
+
+void Tile::setNormalTexture()
+{
+	setTexture(normalTexture);
+}
+
+void Tile::setHighlightTexture()
+{
+	setTexture(highlightTexture);
 }
