@@ -6,7 +6,7 @@ Piece::Piece(sf::Vector2f size, std::shared_ptr<sf::Texture>& texture, Global::P
 {
 	this->p_Body.setTexture(p_Texture.get());
 	shader = std::make_shared<sf::Shader>();
-	p_Selected = false;
+	p_UseShader = false;
 	p_Color = color;
 }
 
@@ -18,8 +18,8 @@ Piece::Piece()
 
 void Piece::setPieceSelected(bool b)
 {
+	this->p_UseShader = b;
 	this->p_Selected = b;
-
 	if (b == true)
 	{
 		if (!shader->loadFromFile(RESOURCE "/shaders/fresnel.frag", sf::Shader::Fragment))
@@ -32,6 +32,27 @@ void Piece::setPieceSelected(bool b)
 		shader->setUniform("boundaryWidth", 2.00f);
 		shader->setUniform("textureSampler", sf::Shader::CurrentTexture);
 	}
+}
+
+void Piece::setDangerHighlight(bool b)
+{
+	p_UseShader = b;
+
+	if (b == true)
+	{
+		if (!shader->loadFromFile(RESOURCE "/shaders/RedHighlight.frag", sf::Shader::Fragment))
+		{
+			// Failed to load shader
+			std::cout << "Failed to load piece  Red highlight shader" << std::endl;
+		}
+		shader->setUniform("redIncrease", 0.5f);
+		shader->setUniform("texture", sf::Shader::CurrentTexture);
+	}
+}
+
+void Piece::setUseShader(bool b)
+{
+	p_UseShader = false;
 }
 
 void Piece::pieceToggleSelection()
@@ -49,7 +70,7 @@ Global::Color Piece::getPieceColor()
 
 void Piece::Render(sf::RenderWindow& window)
 {
-	if (isPieceSelected() == true)
+	if (doesUseShader() == true)
 	{
 		window.draw(this->p_Body, shader.get());
 	}

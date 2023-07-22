@@ -22,6 +22,10 @@ void Tile::Render(sf::RenderWindow& window)
 	{
 		if (piece->getPieceType() != Global::Piece_Type::Null)
 		{
+			if (isHighlighted)
+				piece->setDangerHighlight(true);
+			else
+				piece->setUseShader(false);
 			piece->Render(window);
 		}
 	}
