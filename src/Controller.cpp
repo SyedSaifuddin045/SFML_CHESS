@@ -238,12 +238,108 @@ const std::vector<sf::Vector2i> Controller::GetPiecePositions(std::shared_ptr<Pi
 		}
 		break;
 	case Global::Piece_Type::Unth:
+		for (int i = 1; i <= 4; i++)
+		{
+			vertical = (i == 2 || i == 4) ? 1 : -1;
+			horizontal = (i == 1 || i == 4) ? 1 : -1;
+			int newRow = boardPosition.x + vertical;
+			int newCol = boardPosition.y + horizontal;
+
+			while (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8)
+			{
+				if (!model.isOccupied(sf::Vector2i(newRow, newCol)) || model.isPositionOccupiedByEnemy(sf::Vector2i(newRow, newCol), color))
+					availablePositions.push_back(sf::Vector2i(newRow, newCol));
+
+				if (model.isPositionOccupiedByEnemy(sf::Vector2i(newRow, newCol), color) || model.isOccupied(sf::Vector2i(newRow,newCol)))
+					break;
+
+				newRow += vertical;
+				newCol += horizontal;
+			}
+		}
+
 		break;
 	case Global::Piece_Type::Wazir:
-		// Add rules for Wazir based on color
+		for (int i = 1; i <= 8; i++)
+		{
+			vertical = (i == 2 || i == 4) ? 1 : -1;
+			horizontal = (i == 1 || i == 4) ? 1 : -1;
+
+			int newRow = boardPosition.x + vertical;
+			int newCol = boardPosition.y + horizontal;
+
+			while (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8)
+			{
+				if (!model.isOccupied(sf::Vector2i(newRow, newCol)) || model.isPositionOccupiedByEnemy(sf::Vector2i(newRow, newCol), color))
+					availablePositions.push_back(sf::Vector2i(newRow, newCol));
+
+				if (model.isPositionOccupiedByEnemy(sf::Vector2i(newRow, newCol), color) || model.isOccupied(sf::Vector2i(newRow, newCol)))
+					break;
+
+				newRow += vertical;
+				newCol += horizontal;
+			}
+		}
+
+		for (int j = 1; j <= 2; j++)
+		{
+			if (j == 1)
+			{
+				vertical = 1, horizontal = 1;
+			}
+			else {
+				vertical = -1, horizontal = -1;
+			}
+			//For Vertical
+			for (int i = boardPosition.y; i >= 0 && i <= 7;)
+			{
+				i += vertical;
+				if (!model.isOccupied(sf::Vector2i(boardPosition.x, i)) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x, i), color))
+				{
+					availablePositions.push_back(sf::Vector2i(boardPosition.x, i));
+					if (model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x, i), color))
+						break;
+				}
+				else
+				{
+					break;
+				}
+			}
+			//For Horizontal
+			for (int i = boardPosition.x; i >= 0 && i <= 7;)
+			{
+				i += horizontal;
+				if (!model.isOccupied(sf::Vector2i(i, boardPosition.y)) || model.isPositionOccupiedByEnemy(sf::Vector2i(i, boardPosition.y), color))
+				{
+					availablePositions.push_back(sf::Vector2i(i, boardPosition.y));
+					if (model.isPositionOccupiedByEnemy(sf::Vector2i(i, boardPosition.y), color))
+						break;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
 		break;
 	case Global::Piece_Type::Raaja:
-		// Add rules for Raaja based on color
+		for (int i = -1; i <= 1; i++)
+		{
+			for (int j = -1; j <= 1; j++)
+			{
+				if (i == 0 && j == 0)
+					continue; // Skip the current position (King's own position)
+
+				int newRow = boardPosition.x + i;
+				int newCol = boardPosition.y + j;
+
+				if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8)
+				{
+					if (!model.isOccupied(sf::Vector2i(newRow, newCol)) || model.isPositionOccupiedByEnemy(sf::Vector2i(newRow, newCol), color))
+						availablePositions.push_back(sf::Vector2i(newRow, newCol));
+				}
+			}
+		}
 		break;
 	case Global::Piece_Type::Null:
 	default:
