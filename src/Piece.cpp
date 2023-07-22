@@ -7,6 +7,7 @@ Piece::Piece(sf::Vector2f size, std::shared_ptr<sf::Texture>& texture, Global::P
 	this->p_Body.setTexture(p_Texture.get());
 	shader = std::make_shared<sf::Shader>();
 	p_UseShader = false;
+	p_Selected = false;
 	p_Color = color;
 }
 
@@ -70,7 +71,7 @@ Global::Color Piece::getPieceColor()
 
 void Piece::Render(sf::RenderWindow& window)
 {
-	if (doesUseShader() == true)
+	if (p_UseShader == true)
 	{
 		window.draw(this->p_Body, shader.get());
 	}
@@ -93,6 +94,11 @@ void Piece::setPosition(sf::Vector2f Position)
 sf::RectangleShape& Piece::getBody()
 {
 	return this->p_Body;
+}
+
+bool Piece::isPieceSelected()
+{
+	return p_Selected;
 }
 
 void Piece::DeselectPiece()

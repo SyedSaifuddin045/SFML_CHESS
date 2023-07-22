@@ -107,6 +107,7 @@ public:
 	void setUseShader(bool b);
 	void setPosition(sf::Vector2f Position);
 
+	bool isPieceSelected();
 	void DeselectPiece();
 	void pieceToggleSelection();
 private:

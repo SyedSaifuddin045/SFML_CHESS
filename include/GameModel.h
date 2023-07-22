@@ -4,7 +4,6 @@
 #include <Tile.h>
 #include <PieceFactory.h>
 
-
 namespace std {
     template<>
     struct hash<sf::Vector2i>
@@ -24,7 +23,7 @@ public:
     bool isOccupied(sf::Vector2i position);
     bool isPositionOccupiedByEnemy(sf::Vector2i position, Global::Color ourColor);
     void MovePiece(std::shared_ptr<Piece> piece, sf::Vector2i position);
-public:
+    //sf::Vector2i getPiecePosition(std::shared_ptr<Piece>);
     const int rows = 8;
     const int cols = 8;
     const float tile_size = 80.0f;
@@ -36,4 +35,6 @@ public:
 private:
     std::vector<std::vector<Tile>> Board;
     std::unordered_map<sf::Vector2i, std::shared_ptr<Piece>> positionsOccupiedOnBoard;
+    /*std::stack<Command*> executedCommands;
+    std::stack<Command*> undoneCommands;*/
 };
