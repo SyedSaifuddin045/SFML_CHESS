@@ -6,6 +6,7 @@ Controller::Controller(int height, int width, const sf::String& title)
 {
 	lastClickedPiece = std::make_shared<Piece>();
 	lastMouseClickPosition = sf::Vector2i(-1, -1);
+	currentPlayer = Global::Player::white;
 }
 
 void Controller::TogglePiece(std::shared_ptr<Piece> clickedPiece, sf::Vector2i pos)
@@ -62,6 +63,7 @@ void Controller::HandleInput(sf::RenderWindow& window)
 						//model.MovePiece(lastClickedPiece, clickedTile.getGamePosition());
 						std::unique_ptr<Command> moveCommand = std::make_unique<MoveCommand>(model, lastClickedPiece, clickedTile.getGamePosition(), lastClickedTile->getGamePosition());
 						model.executeCommand(std::move(moveCommand));
+						ChangePlayer();
 					}
 				}
 				ResetTiles();
@@ -70,6 +72,8 @@ void Controller::HandleInput(sf::RenderWindow& window)
 			std::shared_ptr<Piece> clickedPiece = clickedTile.getPiece();
 			if (clickedPiece)
 			{
+				if (Global::GetStringFromColor(clickedPiece->getPieceColor()) != Global::getPlayerString(currentPlayer))
+					return;
 				lastClickedTile = &clickedTile;
 				/*if (clickedPiece == lastClickedPiece)
 					return;*/
@@ -78,6 +82,14 @@ void Controller::HandleInput(sf::RenderWindow& window)
 
 		}
 	}
+}
+
+void Controller::ChangePlayer()
+{
+	if (currentPlayer == Global::Player::white)
+		currentPlayer = Global::Player::black;
+	else
+		currentPlayer = Global::Player::white;
 }
 
 void Controller::ResetTiles()

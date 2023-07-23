@@ -16,6 +16,19 @@ namespace std {
 		}
 	};
 }
+
+namespace Global {
+	enum class Player {null, white, black };
+	static std::string getPlayerString(Player p)
+	{
+		if (p == Player::white)
+			return "white";
+		else
+			return "black";
+		return "null";
+	}
+}
+
 class GameModel {
 public:
 

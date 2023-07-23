@@ -13,6 +13,7 @@ public:
 	const std::vector<sf::Vector2i> GetPiecePositions(std::shared_ptr<Piece> piece,sf::Vector2i boardPosition);
 	~Controller();
 	void RunGame();
+	void ChangePlayer();
 private:
 	GameModel model;
 	View view;
@@ -22,4 +23,5 @@ private:
 
 	sf::Vector2i lastMouseClickPosition;
 	std::vector<sf::Vector2i> ClickedPiecePositions;
+	Global::Player currentPlayer;
 };
