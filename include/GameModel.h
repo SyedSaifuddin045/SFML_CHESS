@@ -25,7 +25,7 @@ public:
 	std::vector<std::vector<Tile>>& getBoard() { return this->Board; }
 	bool isOccupied(sf::Vector2i position);
 	bool isPositionOccupiedByEnemy(sf::Vector2i position, Global::Color ourColor);
-	void MovePiece(std::shared_ptr<Piece> piece, sf::Vector2i position);
+	std::pair<sf::Vector2i, std::shared_ptr<Piece>> MovePiece(std::shared_ptr<Piece> piece, sf::Vector2i position, std::pair<sf::Vector2i, std::shared_ptr<Piece>> capturePair);
 	void executeCommand(std::unique_ptr<Command> command);
 
 	void redoCommand();

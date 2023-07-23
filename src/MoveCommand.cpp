@@ -8,10 +8,11 @@ MoveCommand::MoveCommand(GameModel& model, std::shared_ptr<Piece> piece, const s
 
 void MoveCommand::execute()
 {
-	this->model.MovePiece(piece, newPosition);
+	auto pair = std::make_pair(sf::Vector2i(-1, -1), std::make_shared<Piece>(Piece()) );
+	capturedPieceInfo =  model.MovePiece(piece, newPosition,pair);
 }
 
 void MoveCommand::undo()
 {
-	this->model.MovePiece(piece, oldPosition);
+	this->model.MovePiece(piece, oldPosition,capturedPieceInfo);
 }

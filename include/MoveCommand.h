@@ -17,4 +17,5 @@ private:
 	std::shared_ptr<Piece> piece;
 	sf::Vector2i newPosition;
 	sf::Vector2i oldPosition;
+	std::pair<sf::Vector2i, std::shared_ptr<Piece>> capturedPieceInfo;
 };

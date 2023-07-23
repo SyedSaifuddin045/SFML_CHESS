@@ -98,13 +98,14 @@ bool GameModel::isPositionOccupiedByEnemy(sf::Vector2i position,Global::Color ou
 	return false;
 }
 
-void GameModel::MovePiece(std::shared_ptr<Piece> piece, sf::Vector2i position)
+std::pair<sf::Vector2i, std::shared_ptr<Piece>> GameModel::MovePiece(std::shared_ptr<Piece> piece, sf::Vector2i position, std::pair<sf::Vector2i, std::shared_ptr<Piece>> capturePair)
 {
 	auto find = positionsOccupiedOnBoard.find(position);
+	std::pair<sf::Vector2i, std::shared_ptr<Piece>> pair;
 	// Removing if it is occupied by another piece (i.e., enemy)
 	if (find != positionsOccupiedOnBoard.end())
 	{
-		std::cout << "Removed new position from map" << std::endl;
+		pair = *find;
 		positionsOccupiedOnBoard.erase(find);
 	}
 
@@ -129,6 +130,15 @@ void GameModel::MovePiece(std::shared_ptr<Piece> piece, sf::Vector2i position)
 	// Adding the new position for the piece
 	std::cout << "Added the new Position with updated piece" << std::endl;
 	positionsOccupiedOnBoard.insert(std::make_pair(position, piece));
+	if (capturePair.second)
+	{
+		if (capturePair.second->getPieceType() != Global::Piece_Type::Null)
+		{
+			positionsOccupiedOnBoard.insert(capturePair);
+			Board[capturePair.first.x][capturePair.first.y].setPiece(capturePair.second);
+		}
+	}
+	return pair;
 }
 
 void GameModel::executeCommand(std::unique_ptr<Command> command)
