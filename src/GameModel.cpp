@@ -131,6 +131,33 @@ void GameModel::MovePiece(std::shared_ptr<Piece> piece, sf::Vector2i position)
 	positionsOccupiedOnBoard.insert(std::make_pair(position, piece));
 }
 
+void GameModel::executeCommand(std::unique_ptr<Command> command)
+{
+	command->execute();
+	executedCommands.push(std::move(command));
+}
+
+void GameModel::undoLastCommand() {
+	if (!executedCommands.empty()) {
+		std::unique_ptr<Command> lastCommand = std::move(executedCommands.top());
+		executedCommands.pop();
+		lastCommand->undo();
+		undoneCommands.push(std::move(lastCommand));
+	}
+}
+
+void GameModel::redoCommand()
+{
+	if (!undoneCommands.empty())
+	{
+		std::unique_ptr<Command> commandToRedo = std::move(undoneCommands.top());
+		undoneCommands.pop();
+
+		commandToRedo->execute();
+		executedCommands.push(std::move(commandToRedo));
+	}
+}
+
 
 GameModel::GameModel()
 {

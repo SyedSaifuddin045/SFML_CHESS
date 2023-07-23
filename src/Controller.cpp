@@ -59,7 +59,9 @@ void Controller::HandleInput(sf::RenderWindow& window)
 					if (position == clickedTile.getGamePosition())
 					{
 						lastClickedTile->unsetPiece();
-						model.MovePiece(lastClickedPiece, clickedTile.getGamePosition());
+						//model.MovePiece(lastClickedPiece, clickedTile.getGamePosition());
+						std::unique_ptr<Command> moveCommand = std::make_unique<MoveCommand>(model, lastClickedPiece, clickedTile.getGamePosition(), lastClickedTile->getGamePosition());
+						model.executeCommand(std::move(moveCommand));
 					}
 				}
 				ResetTiles();
@@ -106,6 +108,9 @@ void Controller::RunGame()
 	sf::RenderWindow& window = view.getWindow();
 	window.setView(view.getView());
 
+	bool undoKeyPressed = false;
+	bool redoKeyPressed = false;
+
 	while (window.isOpen())
 	{
 		sf::Event event;
@@ -113,11 +118,34 @@ void Controller::RunGame()
 		{
 			if (event.type == sf::Event::Closed)
 				window.close();
-			break;
+
 			if (event.type == sf::Event::Resized)
 				view.ReSizeView();
-			break;
 		}
+
+		// Check for key presses and set corresponding flags
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z) && !undoKeyPressed)
+		{
+			std::cout << "Pressed Undo key" << std::endl;
+			model.undoLastCommand();
+			undoKeyPressed = true;
+		}
+		else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
+		{
+			undoKeyPressed = false;
+		}
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::R) && !redoKeyPressed)
+		{
+			std::cout << "Pressed Redo key" << std::endl;
+			model.redoCommand();
+			redoKeyPressed = true;
+		}
+		else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::R))
+		{
+			redoKeyPressed = false;
+		}
+
 		HandleInput(window);
 		window.clear();
 		view.Display(model.getBoard());

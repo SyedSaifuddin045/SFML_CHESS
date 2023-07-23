@@ -24,8 +24,10 @@ void Tile::Render(sf::RenderWindow& window)
 		{
 			if (isHighlighted)
 				piece->setDangerHighlight(true);
+			else if (piece->isPieceSelected())
+				piece->setPieceSelected(true);
 			else
-				piece->setUseShader(false);
+				piece->setDangerHighlight(false);
 			piece->Render(window);
 		}
 	}
