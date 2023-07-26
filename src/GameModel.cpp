@@ -153,6 +153,11 @@ std::pair<sf::Vector2i, std::shared_ptr<Piece>> GameModel::MovePiece(std::shared
 	return pair;
 }
 
+std::unordered_map<sf::Vector2i, std::shared_ptr<Piece>>&  GameModel::getPositioOccupiedOnBoard()
+{
+	return this->positionsOccupiedOnBoard;
+}
+
 void GameModel::executeCommand(std::unique_ptr<Command> command)
 {
 	command->execute();

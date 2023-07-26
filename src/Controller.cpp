@@ -74,64 +74,25 @@ void Controller::HandleInput(sf::RenderWindow& window)
 			std::shared_ptr<Piece> clickedPiece = clickedTile.getPiece();
 			if (clickedPiece)
 			{
-				currentPlayer->isInCheck();
 				if (clickedPiece->getPieceColor() != currentPlayer->getColor())
 					return;
+				bool isKingCheck = currentPlayer->isInCheck();
 				if (currentPlayer->KingMustMove() && clickedPiece->getPieceType() != Global::Piece_Type::Raaja)
 					return;
 
 				lastClickedTile = &clickedTile;
 
-				std::vector<sf::Vector2i> allPossibleMoves = model.GetPiecePositions(clickedPiece, sf::Vector2i(rowIndex, columnIndex));
-
-				// Create a list to store valid move positions (positions that don't leave the king in check)
-				std::vector<sf::Vector2i> validMoves;
-				if (currentPlayer->isPiecePinned(clickedPiece) || clickedPiece->getPieceType() == Global::Piece_Type::Raaja)
+				if (isKingCheck || currentPlayer->isPiecePinned(clickedPiece) )
 				{
-					for (const sf::Vector2i& movePosition : allPossibleMoves)
-					{
-						lastClickedTile->unsetPiece();
-
-						std::pair<sf::Vector2i, std::shared_ptr<Piece>> capturedPieceInfo;
-						auto pair = std::make_pair(sf::Vector2i(-1, -1), std::make_shared<Piece>(Piece()));
-						capturedPieceInfo = model.MovePiece(clickedPiece, movePosition, pair);
-
-						if (clickedPiece->getPieceType() == Global::Piece_Type::Raaja)
-						{
-							currentPlayer->updateKingPosition(movePosition);
-						}
-
-						// Check if the move results in the king being in check
-						bool isKingInCheck = currentPlayer->isInCheck();
-
-						// Move the piece back to its original position
-						model.MovePiece(clickedPiece, sf::Vector2i(rowIndex, columnIndex), capturedPieceInfo);
-
-						if (clickedPiece->getPieceType() == Global::Piece_Type::Raaja)
-						{
-							currentPlayer->updateKingPosition(clickedTile.getGamePosition());
-						}
-						if(movePosition.x>=0 && movePosition.y>=0 && movePosition.x<=7 && movePosition.y<=7)
-						model.getBoard()[movePosition.x][movePosition.y].unsetPiece();
-
-						if (capturedPieceInfo.second && capturedPieceInfo.second->getPieceType() != Global::Piece_Type::Null)
-						{
-							model.getBoard()[movePosition.x][movePosition.y].setPiece(capturedPieceInfo.second);
-						}
-						ResetTiles();
-						// If the king is not in check after the move, add the position to the list of valid moves
-						if (!isKingInCheck)
-						{
-							validMoves.push_back(movePosition);
-						}
-					}
-					ClickedPiecePositions = validMoves;
+					auto validMoves = currentPlayer->getValidMoves();
+					auto find = validMoves.find(clickedPiece);
+					if (find != validMoves.end())
+						ClickedPiecePositions = find->second;
 				}
 				else
 				{
-					ClickedPiecePositions = allPossibleMoves;
+					ClickedPiecePositions = model.GetPiecePositions(clickedPiece, sf::Vector2i(rowIndex, columnIndex));
 				}
-
 				TogglePiece(clickedPiece, sf::Vector2i(rowIndex, columnIndex));
 			}
 

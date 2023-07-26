@@ -16,18 +16,20 @@ namespace Global {
 		void CheckDiagonal();
 		void CheckStraight();
 		void CheckPyada();
+		std::unordered_map<std::shared_ptr<Piece>, std::vector<sf::Vector2i>>& getValidMoves();
 		bool KingMustMove();
 		bool isPiecePinned(std::shared_ptr<Piece> piece);
 		void CheckGhoda();
+		void getAllVaidMoves();
 	private:
 		Global::Color color;
 		sf::Vector2i kingPosition;
 		std::shared_ptr<Piece> King;
 		bool isCheck;
 
-		std::vector<sf::Vector2i> kingMovableLocations;
 		std::vector<std::pair<sf::Vector2i, std::shared_ptr<Piece>>> CheckPieces;
 		std::vector<std::pair<sf::Vector2i, std::shared_ptr<Piece>>> PinnedPieces;
+		std::unordered_map<std::shared_ptr<Piece>, std::vector<sf::Vector2i>> validMoves;
 
 		GameModel& model;
 	};

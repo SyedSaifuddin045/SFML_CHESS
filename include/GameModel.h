@@ -17,6 +17,8 @@ namespace std {
 	};
 }
 
+class Player;
+
 class GameModel {
 public:
 
@@ -32,6 +34,7 @@ public:
 	const std::vector<sf::Vector2i> GetPiecePositions(std::shared_ptr<Piece> piece, sf::Vector2i boardPosition);
 	void redoCommand();
 	void undoLastCommand();
+	std::unordered_map<sf::Vector2i, std::shared_ptr<Piece>>& getPositioOccupiedOnBoard();
 	const int rows = 8;
 	const int cols = 8;
 	const float tile_size = 80.0f;
@@ -40,6 +43,7 @@ public:
 	std::shared_ptr<sf::Texture> BlackTexture;
 	std::shared_ptr<sf::Texture> WhiteHighlightTexture;
 	std::shared_ptr<sf::Texture> BlackHighlightTexture;
+	friend Player;
 private:
 	std::vector<std::vector<Tile>> Board;
 	std::unordered_map<sf::Vector2i, std::shared_ptr<Piece>> positionsOccupiedOnBoard;

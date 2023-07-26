@@ -27,6 +27,7 @@ bool Global::Player::isInCheck()
 	return this->isCheck;
 }
 
+
 void Global::Player::updateKingPosition(sf::Vector2i pos)
 {
 	kingPosition = pos;
@@ -154,6 +155,14 @@ void Global::Player::CheckPyada()
 	}
 }
 
+std::unordered_map<std::shared_ptr<Piece>, std::vector<sf::Vector2i>>& Global::Player::getValidMoves()
+{
+	validMoves.clear();
+	getAllVaidMoves();
+	// TODO: insert return statement here
+	return this->validMoves;
+}
+
 bool Global::Player::KingMustMove()
 {
 	if (CheckPieces.size() > 1 && isCheck == true)
@@ -198,6 +207,58 @@ void Global::Player::CheckGhoda()
 					CheckPieces.push_back(std::make_pair(sf::Vector2i(newX, newY), pieceAtPosition));
 				}
 			}
+		}
+	}
+}
+
+void Global::Player::getAllVaidMoves()
+{
+	auto positionsOccupiedOnBoard = model.getPositioOccupiedOnBoard();
+	for (auto position : positionsOccupiedOnBoard)
+	{
+		auto currentPiece = position.second;
+		auto currentPosition = position.first;
+		if (currentPiece->getPieceColor() == color)
+		{
+			std::vector<sf::Vector2i> currentPieceMovablePositions;
+			auto PieceMovablePositions = model.GetPiecePositions(currentPiece, currentPosition);
+			for (auto movablePosition : PieceMovablePositions)
+			{
+				model.getBoard()[currentPosition.x][currentPosition.y].unsetPiece();
+
+				std::pair<sf::Vector2i, std::shared_ptr<Piece>> capturedPieceInfo;
+				auto pair = std::make_pair(sf::Vector2i(-1, -1), std::make_shared<Piece>(Piece()));
+				capturedPieceInfo = model.MovePiece(currentPiece, movablePosition, pair);
+
+				if (currentPiece->getPieceType() == Global::Piece_Type::Raaja)
+				{
+					updateKingPosition(movablePosition);
+				}
+
+				// Check if the move results in the king being in check
+				bool isKingInCheck = isInCheck();
+
+				// Move the piece back to its original position
+				model.MovePiece(currentPiece, currentPosition, capturedPieceInfo);
+
+				if (currentPiece->getPieceType() == Global::Piece_Type::Raaja)
+				{
+					updateKingPosition(currentPosition);
+				}
+				if (movablePosition.x >= 0 && movablePosition.y >= 0 && movablePosition.x <= 7 && movablePosition.y <= 7)
+					model.getBoard()[movablePosition.x][movablePosition.y].unsetPiece();
+
+				if (capturedPieceInfo.second && capturedPieceInfo.second->getPieceType() != Global::Piece_Type::Null)
+				{
+					model.getBoard()[movablePosition.x][movablePosition.y].setPiece(capturedPieceInfo.second);
+				}
+				// If the king is not in check after the move, add the position to the list of valid moves
+				if (!isKingInCheck)
+				{
+					currentPieceMovablePositions.push_back(movablePosition);
+				}
+			}
+			validMoves.insert(std::make_pair(currentPiece, currentPieceMovablePositions));
 		}
 	}
 }
