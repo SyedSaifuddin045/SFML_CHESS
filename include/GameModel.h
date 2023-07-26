@@ -17,30 +17,19 @@ namespace std {
 	};
 }
 
-namespace Global {
-	enum class Player {null, white, black };
-	static std::string getPlayerString(Player p)
-	{
-		if (p == Player::white)
-			return "white";
-		else
-			return "black";
-		return "null";
-	}
-}
-
 class GameModel {
 public:
 
 	GameModel();
-	std::pair<Global::Piece_Type, Global::Color> GetPieceForPosiition(int row, int col);
+	std::pair<Global::Piece_Type, Global::Color> GetPieceTypeAndColorAt(int row, int col);
+	std::shared_ptr<Piece> getPieceAtPosition(sf::Vector2i pos);
 	void InitializeBoard();
 	std::vector<std::vector<Tile>>& getBoard() { return this->Board; }
 	bool isOccupied(sf::Vector2i position);
 	bool isPositionOccupiedByEnemy(sf::Vector2i position, Global::Color ourColor);
 	std::pair<sf::Vector2i, std::shared_ptr<Piece>> MovePiece(std::shared_ptr<Piece> piece, sf::Vector2i position, std::pair<sf::Vector2i, std::shared_ptr<Piece>> capturePair);
 	void executeCommand(std::unique_ptr<Command> command);
-
+	const std::vector<sf::Vector2i> GetPiecePositions(std::shared_ptr<Piece> piece, sf::Vector2i boardPosition);
 	void redoCommand();
 	void undoLastCommand();
 	const int rows = 8;

@@ -45,7 +45,7 @@ void Tile::unsetPiece()
 	this->piece.reset();
 	/*Piece newPiece = PieceFactory::CreatePiece(Global::Piece_Type::Null, Global::Color::null);
 	piece = std::make_shared<Piece>(newPiece);*/
-	std::cout << "Piece count after unsetting : " << piece.use_count() << std::endl;
+	//std::cout << "Piece count after unsetting : " << piece.use_count() << std::endl;
 	this->piece = nullptr;
 }
 

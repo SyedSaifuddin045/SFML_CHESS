@@ -1,6 +1,7 @@
 #pragma once
 #include <GameModel.h>
 #include <View.h>
+#include <Player.h>
 
 class  Controller
 {
@@ -10,7 +11,6 @@ public:
 	void HandleInput(sf::RenderWindow& window);
 	void ResetTiles();
 	void PreventDuplicateClicks(int rowIndex, int columnIndex, bool& retFlag);
-	const std::vector<sf::Vector2i> GetPiecePositions(std::shared_ptr<Piece> piece,sf::Vector2i boardPosition);
 	~Controller();
 	void RunGame();
 	void ChangePlayer();
@@ -23,5 +23,7 @@ private:
 
 	sf::Vector2i lastMouseClickPosition;
 	std::vector<sf::Vector2i> ClickedPiecePositions;
-	Global::Player currentPlayer;
+	Global::Player WhitePlayer;
+	Global::Player BlackPlayer;
+	Global::Player* currentPlayer;
 };
