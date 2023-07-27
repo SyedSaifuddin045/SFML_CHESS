@@ -4,8 +4,8 @@
 #include <SFML/Graphics.hpp>
 #include <Tile.h>
 
-constexpr auto VIEW_HEIGHT = 670.0f;
-constexpr auto VIEW_WIDTH = 670.0f;
+constexpr auto VIEW_HEIGHT = 720.0f;
+constexpr auto VIEW_WIDTH = 720.0f;
 class View {
 public:
 	View(sf::VideoMode videoMode,const sf::String& title);

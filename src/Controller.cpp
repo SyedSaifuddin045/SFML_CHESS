@@ -7,6 +7,7 @@ Controller::Controller(int height, int width, const sf::String& title)
 	lastClickedPiece = std::make_shared<Piece>();
 	lastMouseClickPosition = sf::Vector2i(-1, -1);
 	currentPlayer = &WhitePlayer;
+	isPaused = false;
 }
 
 void Controller::TogglePiece(std::shared_ptr<Piece> clickedPiece, sf::Vector2i pos)
@@ -82,12 +83,18 @@ void Controller::HandleInput(sf::RenderWindow& window)
 
 				lastClickedTile = &clickedTile;
 
-				if (isKingCheck || currentPlayer->isPiecePinned(clickedPiece) )
+				if (isKingCheck || currentPlayer->isPiecePinned(clickedPiece))
 				{
 					auto validMoves = currentPlayer->getValidMoves();
+					if (validMoves.size() <= 0)
+					{
+						currentPlayer->checkMate();
+					}
 					auto find = validMoves.find(clickedPiece);
 					if (find != validMoves.end())
 						ClickedPiecePositions = find->second;
+					else
+						return;
 				}
 				else
 				{
@@ -139,53 +146,120 @@ void Controller::PreventDuplicateClicks(int rowIndex, int columnIndex, bool& ret
 void Controller::RunGame()
 {
 	sf::RenderWindow& window = view.getWindow();
+	window.setFramerateLimit(30);
 	window.setView(view.getView());
+
+	ImGui::SFML::Init(window);
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.FrameRounding = 5.0f;
 
 	bool undoKeyPressed = false;
 	bool redoKeyPressed = false;
 
+	sf::Clock clock;
 	while (window.isOpen())
 	{
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
+			ImGui::SFML::ProcessEvent(event);
 			if (event.type == sf::Event::Closed)
 				window.close();
 
 			if (event.type == sf::Event::Resized)
 				view.ReSizeView();
 		}
+		ImGui::SFML::Update(window, clock.restart());
+		ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground;
 
-		// Check for key presses and set corresponding flags
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z) && !undoKeyPressed)
-		{
-			std::cout << "Pressed Undo key" << std::endl;
-			model.undoLastCommand();
-			ChangePlayer();
-			undoKeyPressed = true;
-		}
-		else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
-		{
-			undoKeyPressed = false;
-		}
+		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::R) && !redoKeyPressed)
+		ImGui::Begin("Pause/Resume", 0, flags);
+		if (isPaused)
 		{
-			std::cout << "Pressed Redo key" << std::endl;
-			model.redoCommand();
-			ChangePlayer();
-			redoKeyPressed = true;
+			if (ImGui::Button("PLAY"))
+			{
+				isPaused = false;
+			}
 		}
-		else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::R))
+		else
 		{
-			redoKeyPressed = false;
+			if (ImGui::Button("PAUSE"))
+			{
+				isPaused = true;
+			}
 		}
+		ImGui::End();
+		if (isPaused)
+		{
+			ImVec2 windowPos(window.getSize().x / 2.0f, window.getSize().y / 2.0f);
+			ImVec2 windowSize(window.getSize().x, 20);
+			ImGui::SetNextWindowPos(ImVec2(windowPos.x - windowSize.x / 2, windowPos.y - windowSize.y / 2), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
+			ImGui::Begin("Game Paused", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+			ImVec2 textSize = ImGui::CalcTextSize("The Game is Paused");
+			ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x + ImGui::GetWindowContentRegionMin().x - textSize.x) * 0.5f);
+			ImGui::SetCursorPosY((ImGui::GetWindowContentRegionMax().y + ImGui::GetWindowContentRegionMin().y - textSize.y) * 0.5f);
+			ImGui::Text("The Game is Paused");
+			ImGui::End();
+		}
+		if (!isPaused)
+		{
+			// Check for key presses and set corresponding flags
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z) && !undoKeyPressed)
+			{
+				std::cout << "Pressed Undo key" << std::endl;
+				model.undoLastCommand();
+				ChangePlayer();
+				undoKeyPressed = true;
+			}
+			else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
+			{
+				undoKeyPressed = false;
+			}
 
-		HandleInput(window);
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::R) && !redoKeyPressed)
+			{
+				std::cout << "Pressed Redo key" << std::endl;
+				model.redoCommand();
+				ChangePlayer();
+				redoKeyPressed = true;
+			}
+			else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::R))
+			{
+				redoKeyPressed = false;
+			}
+
+			ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground;
+
+			ImGui::SetNextWindowPos(ImVec2(window.getSize().x - 100, 0), ImGuiCond_Always);
+
+			ImGui::Begin("Buttons", 0, flags);
+
+			if (ImGui::Button("UNDO"))
+			{
+				model.undoLastCommand();
+				ChangePlayer();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("REDO"))
+			{
+				model.redoCommand();
+				ChangePlayer();
+			}
+
+			//ImGui::ShowDemoWindow();
+			ImGui::End();
+
+			HandleInput(window);
+		}
 		window.clear();
 		view.Display(model.getBoard());
+		ImGui::SFML::Render(window);
 		window.display();
 	}
+	ImGui::SFML::Shutdown();
 }
 
 Controller::~Controller()

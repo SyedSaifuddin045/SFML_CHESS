@@ -258,7 +258,14 @@ void Global::Player::getAllVaidMoves()
 					currentPieceMovablePositions.push_back(movablePosition);
 				}
 			}
-			validMoves.insert(std::make_pair(currentPiece, currentPieceMovablePositions));
+			if (currentPieceMovablePositions.size() > 0)
+				validMoves.insert(std::make_pair(currentPiece, currentPieceMovablePositions));
 		}
 	}
+}
+
+void Global::Player::checkMate()
+{
+	Global::Color winColor = (color == Global::Color::white) ? Global::Color::black : Global::Color::white;
+	std::cout << "You Lost!\n" << Global::GetStringFromColor(winColor) << " Wins!" << std::endl;
 }

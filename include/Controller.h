@@ -1,4 +1,8 @@
 #pragma once
+
+#include <iamgui/imgui.h>
+#include <iamgui/imgui-SFML.h>
+
 #include <GameModel.h>
 #include <View.h>
 #include <Player.h>
@@ -26,4 +30,5 @@ private:
 	Global::Player WhitePlayer;
 	Global::Player BlackPlayer;
 	Global::Player* currentPlayer;
+	bool isPaused;
 };

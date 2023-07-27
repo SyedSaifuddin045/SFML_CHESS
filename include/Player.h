@@ -21,6 +21,7 @@ namespace Global {
 		bool isPiecePinned(std::shared_ptr<Piece> piece);
 		void CheckGhoda();
 		void getAllVaidMoves();
+		void checkMate();
 	private:
 		Global::Color color;
 		sf::Vector2i kingPosition;

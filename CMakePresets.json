@@ -1,4 +1,4 @@
-﻿{
+{
     "version": 3,
     "configurePresets": [
         {
@@ -56,6 +56,23 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
+        },
+        {
+            "name": "Debug",
+            "description": "",
+            "displayName": "",
+            "inherits": [
+                "x64-debug",
+                "x64-release"
+            ]
+        },
+        {
+            "name": "k",
+            "description": "",
+            "displayName": "",
+            "inherits": [
+                "x64-debug"
+            ]
         }
     ]
 }
