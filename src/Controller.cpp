@@ -2,31 +2,29 @@
 #include <Log.h>
 
 Controller::Controller(int height, int width, const sf::String& title)
-	:view(sf::VideoMode(width, height), title), model()
+	:view(sf::VideoMode(width, height), title), model(), WhitePlayer(sf::Vector2i(7, 4), model), BlackPlayer(sf::Vector2i(0, 4), model)
 {
 	lastClickedPiece = std::make_shared<Piece>();
 	lastMouseClickPosition = sf::Vector2i(-1, -1);
+	currentPlayer = &WhitePlayer;
+	isPaused = false;
 }
 
 void Controller::TogglePiece(std::shared_ptr<Piece> clickedPiece, sf::Vector2i pos)
 {
 	if (clickedPiece->getPieceType() != Global::Piece_Type::Null)
 	{
-		if (!clickedPiece->isPieceSelected()) {
-			clickedPiece->pieceToggleSelection();
-			lastClickedPiece = clickedPiece;
+		clickedPiece->pieceToggleSelection();
+		lastClickedPiece = clickedPiece;
 
-			// Get available move positions for the selected piece and highlight the tiles
-			ClickedPiecePositions = GetPiecePositions(clickedPiece, pos);
-			for (auto position : ClickedPiecePositions)
+		for (auto position : ClickedPiecePositions)
+		{
+			if (position.x <= 7 && position.x >= 0 && position.y <= 7 && position.y >= 0)
 			{
-				if (position.x <= 7 && position.x >= 0 && position.y <= 7 && position.y >= 0)
-				{
-					if ((position.x + position.y) % 2 == 0)
-						model.getBoard()[position.x][position.y].setHighlightTexture();
-					else
-						model.getBoard()[position.x][position.y].setHighlightTexture();
-				}
+				if ((position.x + position.y) % 2 == 0)
+					model.getBoard()[position.x][position.y].setHighlightTexture();
+				else
+					model.getBoard()[position.x][position.y].setHighlightTexture();
 			}
 		}
 	}
@@ -61,7 +59,14 @@ void Controller::HandleInput(sf::RenderWindow& window)
 					if (position == clickedTile.getGamePosition())
 					{
 						lastClickedTile->unsetPiece();
-						model.MovePiece(lastClickedPiece, clickedTile.getGamePosition());
+						//model.MovePiece(lastClickedPiece, clickedTile.getGamePosition());
+						if (lastClickedPiece->getPieceType() == Global::Piece_Type::Raaja)
+						{
+							currentPlayer->updateKingPosition(clickedTile.getGamePosition());
+						}
+						std::unique_ptr<Command> moveCommand = std::make_unique<MoveCommand>(model, lastClickedPiece, clickedTile.getGamePosition(), lastClickedTile->getGamePosition());
+						model.executeCommand(std::move(moveCommand));
+						ChangePlayer();
 					}
 				}
 				ResetTiles();
@@ -70,9 +75,31 @@ void Controller::HandleInput(sf::RenderWindow& window)
 			std::shared_ptr<Piece> clickedPiece = clickedTile.getPiece();
 			if (clickedPiece)
 			{
-				lastClickedTile = &clickedTile;
-				if (clickedPiece == lastClickedPiece)
+				if (clickedPiece->getPieceColor() != currentPlayer->getColor())
 					return;
+				bool isKingCheck = currentPlayer->isInCheck();
+				if (currentPlayer->KingMustMove() && clickedPiece->getPieceType() != Global::Piece_Type::Raaja)
+					return;
+
+				lastClickedTile = &clickedTile;
+
+				if (isKingCheck || currentPlayer->isPiecePinned(clickedPiece))
+				{
+					auto validMoves = currentPlayer->getValidMoves();
+					if (validMoves.size() <= 0)
+					{
+						currentPlayer->checkMate();
+					}
+					auto find = validMoves.find(clickedPiece);
+					if (find != validMoves.end())
+						ClickedPiecePositions = find->second;
+					else
+						return;
+				}
+				else
+				{
+					ClickedPiecePositions = model.GetPiecePositions(clickedPiece, sf::Vector2i(rowIndex, columnIndex));
+				}
 				TogglePiece(clickedPiece, sf::Vector2i(rowIndex, columnIndex));
 			}
 
@@ -80,12 +107,26 @@ void Controller::HandleInput(sf::RenderWindow& window)
 	}
 }
 
+void Controller::ChangePlayer()
+{
+	if (currentPlayer->getColor() == Global::Color::white)
+		currentPlayer = &BlackPlayer;
+	else
+		currentPlayer = &WhitePlayer;
+
+	currentPlayer->isInCheck();
+}
+
 void Controller::ResetTiles()
 {
-	lastClickedPiece->DeselectPiece();
+	if (lastClickedPiece)
+	{
+		lastClickedPiece->DeselectPiece();
+	}
 	lastClickedPiece = nullptr;
 	for (auto& row : model.getBoard()) {
 		for (auto& tile : row) {
+			tile.isHighlighted = false;
 			tile.setNormalTexture();
 		}
 	}
@@ -105,152 +146,120 @@ void Controller::PreventDuplicateClicks(int rowIndex, int columnIndex, bool& ret
 void Controller::RunGame()
 {
 	sf::RenderWindow& window = view.getWindow();
+	window.setFramerateLimit(30);
 	window.setView(view.getView());
 
+	ImGui::SFML::Init(window);
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.FrameRounding = 5.0f;
+
+	bool undoKeyPressed = false;
+	bool redoKeyPressed = false;
+
+	sf::Clock clock;
 	while (window.isOpen())
 	{
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
+			ImGui::SFML::ProcessEvent(event);
 			if (event.type == sf::Event::Closed)
 				window.close();
-			break;
+
 			if (event.type == sf::Event::Resized)
 				view.ReSizeView();
-			break;
 		}
-		HandleInput(window);
+		ImGui::SFML::Update(window, clock.restart());
+		ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground;
+
+		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+
+		ImGui::Begin("Pause/Resume", 0, flags);
+		if (isPaused)
+		{
+			if (ImGui::Button("PLAY"))
+			{
+				isPaused = false;
+			}
+		}
+		else
+		{
+			if (ImGui::Button("PAUSE"))
+			{
+				isPaused = true;
+			}
+		}
+		ImGui::End();
+		if (isPaused)
+		{
+			ImVec2 windowPos(window.getSize().x / 2.0f, window.getSize().y / 2.0f);
+			ImVec2 windowSize(window.getSize().x, 20);
+			ImGui::SetNextWindowPos(ImVec2(windowPos.x - windowSize.x / 2, windowPos.y - windowSize.y / 2), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
+			ImGui::Begin("Game Paused", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+			ImVec2 textSize = ImGui::CalcTextSize("The Game is Paused");
+			ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x + ImGui::GetWindowContentRegionMin().x - textSize.x) * 0.5f);
+			ImGui::SetCursorPosY((ImGui::GetWindowContentRegionMax().y + ImGui::GetWindowContentRegionMin().y - textSize.y) * 0.5f);
+			ImGui::Text("The Game is Paused");
+			ImGui::End();
+		}
+		if (!isPaused)
+		{
+			// Check for key presses and set corresponding flags
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z) && !undoKeyPressed)
+			{
+				std::cout << "Pressed Undo key" << std::endl;
+				model.undoLastCommand();
+				ChangePlayer();
+				undoKeyPressed = true;
+			}
+			else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
+			{
+				undoKeyPressed = false;
+			}
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::R) && !redoKeyPressed)
+			{
+				std::cout << "Pressed Redo key" << std::endl;
+				model.redoCommand();
+				ChangePlayer();
+				redoKeyPressed = true;
+			}
+			else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::R))
+			{
+				redoKeyPressed = false;
+			}
+
+			ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground;
+
+			ImGui::SetNextWindowPos(ImVec2(window.getSize().x - 100, 0), ImGuiCond_Always);
+
+			ImGui::Begin("Buttons", 0, flags);
+
+			if (ImGui::Button("UNDO"))
+			{
+				model.undoLastCommand();
+				ChangePlayer();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("REDO"))
+			{
+				model.redoCommand();
+				ChangePlayer();
+			}
+
+			//ImGui::ShowDemoWindow();
+			ImGui::End();
+
+			HandleInput(window);
+		}
 		window.clear();
 		view.Display(model.getBoard());
+		ImGui::SFML::Render(window);
 		window.display();
 	}
-}
-
-const std::vector<sf::Vector2i> Controller::GetPiecePositions(std::shared_ptr<Piece> piece, sf::Vector2i boardPosition)
-{
-	std::vector<sf::Vector2i> availablePositions;
-
-	Global::Color color = piece->getPieceColor();
-	Global::Piece_Type p_type = piece->getPieceType();
-	int forwardDirection = (color == Global::Color::white) ? -1 : 1;
-
-	int vertical = 0;
-	int horizontal = 0;
-
-	switch (p_type)
-	{
-	case Global::Piece_Type::Pyada:
-	{
-		if ((boardPosition.x == 1 || boardPosition.x == 6) && !model.isOccupied(sf::Vector2i(boardPosition.x + (1 * forwardDirection), boardPosition.y)) && !model.isOccupied(sf::Vector2i(boardPosition.x + (2 * forwardDirection), boardPosition.y)))
-		{
-			availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * forwardDirection), boardPosition.y));
-		}
-		if (!model.isOccupied(sf::Vector2i(boardPosition.x + (1 * forwardDirection), boardPosition.y)))
-		{
-			availablePositions.push_back(sf::Vector2i(boardPosition.x + (1 * forwardDirection), boardPosition.y));
-		}
-		if (boardPosition.y != 0 && model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x + (1 * forwardDirection), boardPosition.y - 1), color))
-			availablePositions.push_back(sf::Vector2i(boardPosition.x + (1 * forwardDirection), boardPosition.y - 1));
-		if (boardPosition.y != 7 && model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x + (1 * forwardDirection), boardPosition.y + 1), color))
-			availablePositions.push_back(sf::Vector2i(boardPosition.x + (1 * forwardDirection), boardPosition.y + 1));
-		break;
-	}
-	case Global::Piece_Type::Haanthi:
-		for (int j = 1; j <= 2; j++)
-		{
-			if (j == 1)
-			{
-				vertical = 1, horizontal = 1;
-			}
-			else {
-				vertical = -1, horizontal = -1;
-			}
-			//For Vertical
-			for (int i = boardPosition.y; i >= 0 && i <= 7;)
-			{
-				i += vertical;
-				if (!model.isOccupied(sf::Vector2i(boardPosition.x,i)) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x,i), color))
-				{
-					availablePositions.push_back(sf::Vector2i(boardPosition.x,i));
-					if (model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x,i), color))
-						break;
-				}
-				else
-				{
-					break;
-				}
-			}
-			//For Horizontal
-			for (int i = boardPosition.x; i >= 0 && i <= 7;)
-			{
-				i += horizontal;
-				if (!model.isOccupied(sf::Vector2i(i, boardPosition.y)) || model.isPositionOccupiedByEnemy(sf::Vector2i(i, boardPosition.y), color))
-				{
-					availablePositions.push_back(sf::Vector2i(i, boardPosition.y));
-					if (model.isPositionOccupiedByEnemy(sf::Vector2i(i, boardPosition.y), color))
-						break;
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
-		break;
-	case Global::Piece_Type::Ghoda:
-		for (int i = 1; i <= 4; i++)
-		{
-			if (i % 2 == 0)
-			{
-				vertical = (i == 2) ? 1 : -1;
-				if (boardPosition.x + (2 * vertical) <= 7 && boardPosition.x + (2 * vertical) >= 0)
-				{
-					if (boardPosition.y + 1 <= 7 && boardPosition.y + 1 >= 0)
-					{
-						if (!model.isOccupied(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y + 1)) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y + 1), color))
-							availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y + 1));
-					}
-					if (boardPosition.y - 1 <= 7 && boardPosition.y - 1 >= 0)
-					{
-						if (!model.isOccupied(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y - 1)) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y - 1), color))
-							availablePositions.push_back(sf::Vector2i(boardPosition.x + (2 * vertical), boardPosition.y - 1));
-					}
-				}
-			}
-			else
-			{
-				horizontal = (i == 1) ? 1 : -1;
-				if (boardPosition.y + (2 * horizontal) <= 7 && boardPosition.y + (2 * horizontal) >= 0)
-				{
-					if (boardPosition.x + 1 <= 7 && boardPosition.x + 1 >= 0)
-					{
-						if (!model.isOccupied(sf::Vector2i(boardPosition.x + 1, boardPosition.y + (2 * horizontal))) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x + 1, boardPosition.y + (2 * horizontal)), color))
-							availablePositions.push_back(sf::Vector2i(boardPosition.x + 1, boardPosition.y + (2 * horizontal)));
-					}
-					if (boardPosition.x - 1 <= 7 && boardPosition.x - 1 >= 0)
-					{
-						if (!model.isOccupied(sf::Vector2i(boardPosition.x - 1, boardPosition.y + (2 * horizontal))) || model.isPositionOccupiedByEnemy(sf::Vector2i(boardPosition.x - 1, boardPosition.y + (2 * horizontal)), color))
-							availablePositions.push_back(sf::Vector2i(boardPosition.x - 1, boardPosition.y + (2 * horizontal)));
-					}
-				}
-			}
-			horizontal, vertical = 0;
-		}
-		break;
-	case Global::Piece_Type::Unth:
-		break;
-	case Global::Piece_Type::Wazir:
-		// Add rules for Wazir based on color
-		break;
-	case Global::Piece_Type::Raaja:
-		// Add rules for Raaja based on color
-		break;
-	case Global::Piece_Type::Null:
-	default:
-		break;
-	}
-
-	return availablePositions;
+	ImGui::SFML::Shutdown();
 }
 
 Controller::~Controller()

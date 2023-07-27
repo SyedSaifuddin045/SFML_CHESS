@@ -1,0 +1,56 @@
+[
+{
+  "directory": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build",
+  "command": "/usr/bin/c++ -DRESOURCE=\"\\\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build/bin/res\\\"\" -I\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/include\"  -Wall -std=c++17 -g -o CMakeFiles/SFML_CHESS.dir/src/Controller.cpp.o -c \"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/Controller.cpp\"",
+  "file": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/Controller.cpp",
+  "output": "CMakeFiles/SFML_CHESS.dir/src/Controller.cpp.o"
+},
+{
+  "directory": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build",
+  "command": "/usr/bin/c++ -DRESOURCE=\"\\\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build/bin/res\\\"\" -I\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/include\"  -Wall -std=c++17 -g -o CMakeFiles/SFML_CHESS.dir/src/GameModel.cpp.o -c \"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/GameModel.cpp\"",
+  "file": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/GameModel.cpp",
+  "output": "CMakeFiles/SFML_CHESS.dir/src/GameModel.cpp.o"
+},
+{
+  "directory": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build",
+  "command": "/usr/bin/c++ -DRESOURCE=\"\\\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build/bin/res\\\"\" -I\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/include\"  -Wall -std=c++17 -g -o CMakeFiles/SFML_CHESS.dir/src/MoveCommand.cpp.o -c \"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/MoveCommand.cpp\"",
+  "file": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/MoveCommand.cpp",
+  "output": "CMakeFiles/SFML_CHESS.dir/src/MoveCommand.cpp.o"
+},
+{
+  "directory": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build",
+  "command": "/usr/bin/c++ -DRESOURCE=\"\\\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build/bin/res\\\"\" -I\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/include\"  -Wall -std=c++17 -g -o CMakeFiles/SFML_CHESS.dir/src/Piece.cpp.o -c \"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/Piece.cpp\"",
+  "file": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/Piece.cpp",
+  "output": "CMakeFiles/SFML_CHESS.dir/src/Piece.cpp.o"
+},
+{
+  "directory": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build",
+  "command": "/usr/bin/c++ -DRESOURCE=\"\\\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build/bin/res\\\"\" -I\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/include\"  -Wall -std=c++17 -g -o CMakeFiles/SFML_CHESS.dir/src/PieceFactory.cpp.o -c \"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/PieceFactory.cpp\"",
+  "file": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/PieceFactory.cpp",
+  "output": "CMakeFiles/SFML_CHESS.dir/src/PieceFactory.cpp.o"
+},
+{
+  "directory": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build",
+  "command": "/usr/bin/c++ -DRESOURCE=\"\\\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build/bin/res\\\"\" -I\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/include\"  -Wall -std=c++17 -g -o CMakeFiles/SFML_CHESS.dir/src/Player.cpp.o -c \"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/Player.cpp\"",
+  "file": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/Player.cpp",
+  "output": "CMakeFiles/SFML_CHESS.dir/src/Player.cpp.o"
+},
+{
+  "directory": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build",
+  "command": "/usr/bin/c++ -DRESOURCE=\"\\\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build/bin/res\\\"\" -I\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/include\"  -Wall -std=c++17 -g -o CMakeFiles/SFML_CHESS.dir/src/Tile.cpp.o -c \"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/Tile.cpp\"",
+  "file": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/Tile.cpp",
+  "output": "CMakeFiles/SFML_CHESS.dir/src/Tile.cpp.o"
+},
+{
+  "directory": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build",
+  "command": "/usr/bin/c++ -DRESOURCE=\"\\\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build/bin/res\\\"\" -I\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/include\"  -Wall -std=c++17 -g -o CMakeFiles/SFML_CHESS.dir/src/View.cpp.o -c \"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/View.cpp\"",
+  "file": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/View.cpp",
+  "output": "CMakeFiles/SFML_CHESS.dir/src/View.cpp.o"
+},
+{
+  "directory": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build",
+  "command": "/usr/bin/c++ -DRESOURCE=\"\\\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/build/bin/res\\\"\" -I\"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/include\"  -Wall -std=c++17 -g -o CMakeFiles/SFML_CHESS.dir/src/main.cpp.o -c \"/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/main.cpp\"",
+  "file": "/home/zerexius/New Volume/Programming/C++/SFML_CHESS/src/main.cpp",
+  "output": "CMakeFiles/SFML_CHESS.dir/src/main.cpp.o"
+}
+]

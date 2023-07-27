@@ -101,10 +101,13 @@ public:
 	sf::RectangleShape& getBody();
 	Global::Piece_Type getPieceType();
 	Global::Color getPieceColor();
-	bool isPieceSelected() { return p_Selected; }
+	bool doesUseShader() { return p_UseShader; }
 	void setPieceSelected(bool b);
+	void setDangerHighlight(bool b);
+	void setUseShader(bool b);
 	void setPosition(sf::Vector2f Position);
 
+	bool isPieceSelected();
 	void DeselectPiece();
 	void pieceToggleSelection();
 private:
@@ -114,5 +117,6 @@ private:
 
 	Global::Piece_Type p_Type;
 	Global::Color p_Color;
+	bool p_UseShader;
 	bool p_Selected;
 };

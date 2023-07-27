@@ -10,5 +10,5 @@
 
 class PieceFactory {
 public:
-	static Piece CreatePiece(Global::Piece_Type p_type, Global::Color color);
+	static Piece& CreatePiece(Global::Piece_Type p_type, Global::Color color);
 };

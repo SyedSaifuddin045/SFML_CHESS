@@ -22,6 +22,12 @@ void Tile::Render(sf::RenderWindow& window)
 	{
 		if (piece->getPieceType() != Global::Piece_Type::Null)
 		{
+			if (isHighlighted)
+				piece->setDangerHighlight(true);
+			else if (piece->isPieceSelected())
+				piece->setPieceSelected(true);
+			else
+				piece->setDangerHighlight(false);
 			piece->Render(window);
 		}
 	}
@@ -39,7 +45,7 @@ void Tile::unsetPiece()
 	this->piece.reset();
 	/*Piece newPiece = PieceFactory::CreatePiece(Global::Piece_Type::Null, Global::Color::null);
 	piece = std::make_shared<Piece>(newPiece);*/
-	std::cout << "Piece count after unsetting : " << piece.use_count() << std::endl;
+	//std::cout << "Piece count after unsetting : " << piece.use_count() << std::endl;
 	this->piece = nullptr;
 }
 
