@@ -34,6 +34,7 @@ public:
 	const std::vector<sf::Vector2i> GetPiecePositions(std::shared_ptr<Piece> piece, sf::Vector2i boardPosition);
 	void redoCommand();
 	void undoLastCommand();
+	void Reset();
 	std::unordered_map<sf::Vector2i, std::shared_ptr<Piece>>& getPositioOccupiedOnBoard();
 	const int rows = 8;
 	const int cols = 8;

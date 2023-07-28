@@ -217,6 +217,21 @@ GameModel::GameModel()
 }
 
 
+void GameModel::Reset()
+{
+	Board.clear();
+	positionsOccupiedOnBoard.clear();
+	while (!executedCommands.empty())
+	{
+		executedCommands.pop();
+	}
+	while (!undoneCommands.empty())
+	{
+		undoneCommands.pop();
+	}
+	InitializeBoard();
+}
+
 const std::vector<sf::Vector2i> GameModel::GetPiecePositions(std::shared_ptr<Piece> piece, sf::Vector2i boardPosition)
 {
 	std::vector<sf::Vector2i> availablePositions;
