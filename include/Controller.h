@@ -6,9 +6,11 @@
 #include <GameModel.h>
 #include <View.h>
 #include <Player.h>
+#include <Server.h>
+#include <Client.h>
 
 enum class GameState{
-	MainMenu, PlayGame, Pause, End
+	MainMenu,WaitingForConnection, PlayGame, Pause, End
 };
 
 class  Controller
@@ -23,7 +25,7 @@ public:
 	~Controller();
 	void CloseGame();
 	void RunGame();
-	void ShowMainMenu();
+	void ShowMainMenu(bool& showOnlineOption);
 	void ShowPlayGameScreen(bool& undoKeyPressed, bool& redoKeyPressed, sf::RenderWindow& window);
 	void ShowEndScreen(sf::RenderWindow& window);
 	void ShowTurnText(sf::RenderWindow& window);
@@ -31,6 +33,10 @@ public:
 	void showPauseOrPlayButton();
 	void ShowTextInCentre(sf::RenderWindow& window, std::string s);
 	void ChangePlayer();
+	void CreateServer(unsigned short port);
+	void CreateClient(const char* address, unsigned short port);
+	void WaitForConnection();
+	void ShowSpinner();
 private:
 	GameModel model;
 	View view;
@@ -46,4 +52,8 @@ private:
 	bool isPaused;
 	bool checkMate;
 	GameState gameState;
+
+	bool playOnline;
+	Client* client;
+	Server* server;
 };

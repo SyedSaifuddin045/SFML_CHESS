@@ -15,6 +15,9 @@ void Controller::SetUpController()
 	isPaused = false;
 	checkMate = false;
 	gameState = GameState::MainMenu;
+	playOnline = false;
+	server = nullptr;
+	client = nullptr;
 }
 
 void Controller::TogglePiece(std::shared_ptr<Piece> clickedPiece, sf::Vector2i pos)
@@ -72,7 +75,7 @@ void Controller::HandleInput(sf::RenderWindow& window, bool isKingCheck)
 						{
 							currentPlayer->updateKingPosition(clickedTile.getGamePosition());
 						}
-						std::unique_ptr<Command> moveCommand = std::make_unique<MoveCommand>(model, lastClickedPiece, clickedTile.getGamePosition(), lastClickedTile->getGamePosition());
+						std::unique_ptr<Command> moveCommand = std::make_unique<MoveCommand>(model, model.getPieceAtPosition(lastClickedTile->getGamePosition()), clickedTile.getGamePosition(), lastClickedTile->getGamePosition());
 						model.executeCommand(std::move(moveCommand));
 						ChangePlayer();
 					}
@@ -124,6 +127,79 @@ void Controller::ChangePlayer()
 	currentPlayer->isInCheck();
 }
 
+void Controller::CreateServer(unsigned short port)
+{
+	if (!server)
+	{
+		server = new Server(model, port);
+		server->start();
+	}
+}
+
+void Controller::CreateClient(const char* address, unsigned short port)
+{
+	if (!client)
+	{
+		client = new Client(model);
+		client->Connect(address, port);
+	}
+}
+
+void Controller::WaitForConnection()
+{
+	if (server)
+	{
+		ShowSpinner();
+		if (server->IsClientConnected())
+		{
+			std::cout << "Client Successfully Connected To Server!" << std::endl;
+			gameState = GameState::PlayGame;
+		}
+	}
+	if (client)
+	{
+		if (client->isConnectedToServer())
+		{
+			std::cout << "Client Successfully Connected To Server!" << std::endl;
+			gameState = GameState::PlayGame;
+		}
+	}
+}
+
+void Controller::ShowSpinner()
+{
+	static bool use_work_area = true;
+	static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiConfigFlags_NavEnableKeyboard;
+
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
+	ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
+
+	if (ImGui::Begin("Fullscreen window", nullptr, flags))
+	{
+		float radius = 30.0f; // Distance from the center of rotation
+		float windowWidth = ImGui::GetWindowWidth();
+		float windowCenterX = ImGui::GetWindowPos().x + windowWidth * 0.5f;
+
+		ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcTextSize("WAITING FOR CONNECTION...").x * 0.5f, ImGui::GetWindowHeight() / 2.0 - 50.0f));
+		ImGui::Text("WAITING FOR CONNECTION...");
+
+		float angle = ImGui::GetTime() * 2.0f * 3.1415926f; // 2.0f to control rotation speed
+
+		// Calculate the positions of p1 and p2 using trigonometry
+		ImVec2 center(windowCenterX, ImGui::GetWindowHeight() / 2.0f);
+		ImVec2 p1(center.x - radius * cosf(angle), center.y - radius * sinf(angle));
+		ImVec2 p2(center.x + radius * cosf(angle), center.y + radius * sinf(angle));
+
+		// Draw the rotating line
+		ImDrawList* draw_list = ImGui::GetWindowDrawList();
+		static ImVec4 colf = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		const ImU32 col = ImColor(colf);
+		draw_list->AddLine(p1, p2, col, 2.0f);
+	}
+	ImGui::End();
+}
+
 void Controller::ResetTiles()
 {
 	if (lastClickedPiece)
@@ -169,6 +245,7 @@ void Controller::RunGame()
 	bool undoKeyPressed = false;
 	bool redoKeyPressed = false;
 
+	bool showOnlineOption = false;
 	sf::Clock clock;
 	while (window.isOpen())
 	{
@@ -188,7 +265,10 @@ void Controller::RunGame()
 		switch (gameState)
 		{
 		case GameState::MainMenu:
-			ShowMainMenu();
+			ShowMainMenu(showOnlineOption);
+			break;
+		case GameState::WaitingForConnection:
+			WaitForConnection();
 			break;
 		case GameState::PlayGame:
 			ShowPlayGameScreen(undoKeyPressed, redoKeyPressed, window);
@@ -211,7 +291,7 @@ void Controller::RunGame()
 	ImGui::SFML::Shutdown();
 }
 
-void Controller::ShowMainMenu()
+void Controller::ShowMainMenu(bool& showOnlineOption)
 {
 	static bool use_work_area = true;
 	static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiConfigFlags_NavEnableKeyboard;
@@ -222,18 +302,60 @@ void Controller::ShowMainMenu()
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	if (ImGui::Begin("Example: Fullscreen window", nullptr, flags))
+	if (ImGui::Begin("Fullscreen window", nullptr, flags))
 	{
 		float windowWidth = ImGui::GetWindowWidth();
 		float windowCenterX = ImGui::GetWindowPos().x + windowWidth * 0.5f;
 
 		int button_count = 4;
 		// Center the buttons inside the window
-		ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcTextSize("PLAY ONLINE").x * 0.5f, ImGui::GetWindowHeight()/2.0 - button_count * 8));
+		ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcTextSize("PLAY ONLINE").x * 0.5f, ImGui::GetWindowHeight() / 2.0 - button_count * 8));
 
-		if (ImGui::Button("PLAY ONLINE"))
+		if (ImGui::Button("PLAY ONLINE") || showOnlineOption)
 		{
-			// Handle button click
+			showOnlineOption = true;
+			int port = 2300;
+
+			float inputWidth = 60.0f;
+
+			ImGui::SetCursorPosX((windowCenterX - inputWidth) * 0.5f);
+			ImGui::PushItemWidth(inputWidth);
+
+			ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcItemWidth() * 0.5f, ImGui::GetCursorPosY()));
+			ImGui::InputInt("Create Port", &port, 0);
+			ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcTextSize("CREATE SERVER").x * 0.5f, ImGui::GetCursorPosY()));
+			if (ImGui::Button("CREATE SERVER"))
+			{
+				unsigned short p = static_cast<unsigned short>(port);
+				gameState = GameState::WaitingForConnection;
+				CreateServer(p);
+				ImGui::End();
+				return;
+			}
+			//address
+			float addresswidth = 100.0f;
+			ImGui::SetCursorPosX((windowCenterX - addresswidth) * 0.5f);
+			ImGui::PushItemWidth(addresswidth);
+			ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcItemWidth() * 0.5f, ImGui::GetCursorPosY()));
+			static char address[128];
+			ImGui::InputText("Address", address, sizeof(address));
+
+			//port
+			ImGui::SetCursorPosX((windowCenterX - inputWidth) * 0.5f);
+			ImGui::PushItemWidth(inputWidth);
+
+			ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcItemWidth() * 0.5f, ImGui::GetCursorPosY()));
+			ImGui::InputInt("Connect Port", &port, 0);
+
+			ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcTextSize("CONNECT TO SERVER").x * 0.5f, ImGui::GetCursorPosY()));
+			if (ImGui::Button("CONNECT TO SERVER"))
+			{
+				unsigned short p = static_cast<unsigned short>(port);
+				CreateClient(address, p);
+				gameState = GameState::WaitingForConnection;
+				ImGui::End();
+				return;
+			}
 		}
 
 		ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcTextSize("PLAY LOCAL").x * 0.5f, ImGui::GetCursorPosY()));
@@ -257,7 +379,7 @@ void Controller::ShowMainMenu()
 		std::string str = "Created by SyedSaifuddin045 (a.k.a Velcro,Lomdi).";
 		ImVec2 TextLength = ImGui::CalcTextSize(str.c_str());
 		ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - TextLength.x, ImGui::GetWindowHeight() - TextLength.y - 4));
-		ImGui::TextColored(ImVec4(0.9f,0.8f,0.0f,1.0f), "%s", str.c_str());
+		ImGui::TextColored(ImVec4(0.9f, 0.8f, 0.0f, 1.0f), "%s", str.c_str());
 	}
 	ImGui::End();
 }
@@ -300,7 +422,7 @@ void Controller::ShowPlayGameScreen(bool& undoKeyPressed, bool& redoKeyPressed, 
 	ShowUndoAndRedoButtons(window);
 	ShowTurnText(window);
 
-	//ImGui::ShowDemoWindow();
+	ImGui::ShowDemoWindow();
 	ImGui::End();
 
 	HandleInput(window, isKingCheck);
