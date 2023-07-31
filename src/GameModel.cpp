@@ -187,6 +187,7 @@ void GameModel::redoCommand()
 
 
 GameModel::GameModel()
+	:changePlayer(false)
 {
 	WhiteTexture = std::make_shared<sf::Texture>();
 	BlackTexture = std::make_shared<sf::Texture>();
@@ -194,28 +195,43 @@ GameModel::GameModel()
 	WhiteHighlightTexture = std::make_shared<sf::Texture>();
 	BlackHighlightTexture = std::make_shared<sf::Texture>();
 
-	if (!this->WhiteTexture->loadFromFile(RESOURCE "/textures/square/Light_Square.png"))
+	if (!this->WhiteTexture->loadFromFile("res/textures/square/Light_Square.png"))
 	{
 		std::cout << "Failed to load White texture!" << std::endl;
 	}
 
-	if (!this->BlackTexture->loadFromFile(RESOURCE "/textures/square/Dark_Square.png"))
+	if (!this->BlackTexture->loadFromFile("res/textures/square/Dark_Square.png"))
 	{
 		std::cout << "Failed to load Black texture!" << std::endl;
 	}
 
-	if (!this->WhiteHighlightTexture->loadFromFile(RESOURCE "/textures/square/Light_Square_Highlight.png"))
+	if (!this->WhiteHighlightTexture->loadFromFile("res/textures/square/Light_Square_Highlight.png"))
 	{
 		std::cout << "Failed to load White texture!" << std::endl;
 	}
 
-	if (!this->BlackHighlightTexture->loadFromFile(RESOURCE "/textures/square/Dark_Square_Highlight.png"))
+	if (!this->BlackHighlightTexture->loadFromFile("res/textures/square/Dark_Square_Highlight.png"))
 	{
 		std::cout << "Failed to load Black texture!" << std::endl;
 	}
 	InitializeBoard();
 }
 
+
+void GameModel::Reset()
+{
+	Board.clear();
+	positionsOccupiedOnBoard.clear();
+	while (!executedCommands.empty())
+	{
+		executedCommands.pop();
+	}
+	while (!undoneCommands.empty())
+	{
+		undoneCommands.pop();
+	}
+	InitializeBoard();
+}
 
 const std::vector<sf::Vector2i> GameModel::GetPiecePositions(std::shared_ptr<Piece> piece, sf::Vector2i boardPosition)
 {

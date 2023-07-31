@@ -23,7 +23,7 @@ void Piece::setPieceSelected(bool b)
 	this->p_Selected = b;
 	if (b == true)
 	{
-		if (!shader->loadFromFile(RESOURCE "/shaders/fresnel.frag", sf::Shader::Fragment))
+		if (!shader->loadFromFile("res/shaders/fresnel.frag", sf::Shader::Fragment))
 		{
 			// Failed to load shader
 			std::cout << "Failed to load piece highlight shader" << std::endl;
@@ -41,7 +41,7 @@ void Piece::setDangerHighlight(bool b)
 
 	if (b == true)
 	{
-		if (!shader->loadFromFile(RESOURCE "/shaders/RedHighlight.frag", sf::Shader::Fragment))
+		if (!shader->loadFromFile("res/shaders/RedHighlight.frag", sf::Shader::Fragment))
 		{
 			// Failed to load shader
 			std::cout << "Failed to load piece  Red highlight shader" << std::endl;

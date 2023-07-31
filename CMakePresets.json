@@ -65,14 +65,6 @@
                 "x64-debug",
                 "x64-release"
             ]
-        },
-        {
-            "name": "k",
-            "description": "",
-            "displayName": "",
-            "inherits": [
-                "x64-debug"
-            ]
         }
     ]
 }

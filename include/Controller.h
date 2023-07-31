@@ -6,18 +6,40 @@
 #include <GameModel.h>
 #include <View.h>
 #include <Player.h>
+#include <Server.h>
+#include <Client.h>
+
+enum class GameState{
+	MainMenu,WaitingForConnection, PlayGame,ShowPromotion, Pause, End
+};
 
 class  Controller
 {
 public:
 	Controller(int height, int width, const sf::String& title);
+	void SetUpController();
 	void TogglePiece(std::shared_ptr<Piece> clickedPiece, sf::Vector2i pos);
-	void HandleInput(sf::RenderWindow& window);
+	void HandleInput(sf::RenderWindow& window,bool isKingCheck);
 	void ResetTiles();
+	std::string GenerateMoveString(sf::Vector2i from, sf::Vector2i to);
 	void PreventDuplicateClicks(int rowIndex, int columnIndex, bool& retFlag);
 	~Controller();
+	void CloseGame();
 	void RunGame();
+	void ShowMainMenu(bool& showOnlineOption);
+	void ShowPlayGameScreen(bool& undoKeyPressed, bool& redoKeyPressed, sf::RenderWindow& window);
+	void ShowEndScreen(sf::RenderWindow& window);
+	void ShowTurnText(sf::RenderWindow& window);
+	void ShowUndoAndRedoButtons(sf::RenderWindow& window);
+	void showPauseOrPlayButton();
+	void ShowTextInCentre(sf::RenderWindow& window, std::string s);
 	void ChangePlayer();
+	void CreateServer(unsigned short port);
+	void CreateClient(const char* address, unsigned short port);
+	void WaitForConnection();
+	void ShowSpinner(const std::string s, bool background);
+	void ShowPromotionWindow(sf::Vector2f position);
+	void CheckImGuiHover();
 private:
 	GameModel model;
 	View view;
@@ -31,4 +53,14 @@ private:
 	Global::Player BlackPlayer;
 	Global::Player* currentPlayer;
 	bool isPaused;
+	bool checkMate;
+	GameState gameState;
+	bool showPromotionWindow;
+	sf::Vector2f promotionWindowPosition;
+
+	Tile* T_clickedTile;
+	bool playOnline;
+	Client* client;
+	Server* server;
+	bool hoveringGui;
 };

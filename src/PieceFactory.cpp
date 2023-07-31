@@ -10,7 +10,7 @@ Piece& PieceFactory::CreatePiece(Global::Piece_Type p_type, Global::Color color)
     std::string resourceName = "/textures/" + colorString + "/";
     std::string textureFileName = Global::GetStringFromPieceType(p_type) + ".png";
 
-    if (!texture->loadFromFile(RESOURCE + resourceName + textureFileName)) {
+    if (!texture->loadFromFile("res" + resourceName + textureFileName)) {
         std::cout << "Failed to load " << colorString << " " << textureFileName << " texture." << std::endl;
     }
     texture->setSmooth(true);
