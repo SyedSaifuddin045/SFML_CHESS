@@ -13,9 +13,9 @@ public:
 	void start();
 	void Run();
 	bool Server::IsClientConnected() const { return isConnected; }
+	void sendMessage(const std::string& message);
 private:
 	void handleClientMessage();
-	void sendMessage(const std::string& message);
 	void runServerThread();
 private:
 	sf::TcpListener listener;

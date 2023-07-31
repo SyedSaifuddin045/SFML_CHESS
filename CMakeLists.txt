@@ -21,7 +21,6 @@ include_directories(${include_dir})
 
 # Create the executable target
 add_executable(${PROJECT_NAME} ${source_files} ${header_files})
-add_compile_definitions(RESOURCE="${CMAKE_BINARY_DIR}/bin/res")
 
 # Link libraries based on the build configuration and system
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

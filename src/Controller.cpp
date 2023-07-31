@@ -18,6 +18,7 @@ void Controller::SetUpController()
 	playOnline = false;
 	server = nullptr;
 	client = nullptr;
+	hoveringGui = false;
 }
 
 void Controller::TogglePiece(std::shared_ptr<Piece> clickedPiece, sf::Vector2i pos)
@@ -77,6 +78,26 @@ void Controller::HandleInput(sf::RenderWindow& window, bool isKingCheck)
 						}
 						std::unique_ptr<Command> moveCommand = std::make_unique<MoveCommand>(model, model.getPieceAtPosition(lastClickedTile->getGamePosition()), clickedTile.getGamePosition(), lastClickedTile->getGamePosition());
 						model.executeCommand(std::move(moveCommand));
+						//if (lastClickedPiece->getPieceType() == Global::Piece_Type::Pyada  /*&& clickedTile.getGamePosition().x == 0*/ || lastClickedPiece->getPieceType() == Global::Piece_Type::Pyada && clickedTile.getGamePosition().x == 7)
+						//{
+						//	gameState = GameState::ShowPromotion;
+						//	T_clickedTile = &clickedTile;
+						//	promotionWindowPosition = clickedTile.getScreenPosition();
+						//}
+						if (server || client)
+						{
+							std::string MoveString = GenerateMoveString(lastClickedTile->getGamePosition(), clickedTile.getGamePosition());
+							if (server)
+							{
+								std::cout << "Server sending Message : " << MoveString << std::endl;
+								server->sendMessage(MoveString);
+							}
+							if (client)
+							{
+								std::cout << "Client sending Message : " << MoveString << std::endl;
+								client->sendMessage(MoveString);
+							}
+						}
 						ChangePlayer();
 					}
 				}
@@ -86,6 +107,10 @@ void Controller::HandleInput(sf::RenderWindow& window, bool isKingCheck)
 			std::shared_ptr<Piece> clickedPiece = clickedTile.getPiece();
 			if (clickedPiece)
 			{
+				if (server && clickedPiece->getPieceColor() == Global::Color::black)
+					return;
+				if (client && clickedPiece->getPieceColor() == Global::Color::white)
+					return;
 				if (clickedPiece->getPieceColor() != currentPlayer->getColor())
 					return;
 				if (currentPlayer->KingMustMove() && clickedPiece->getPieceType() != Global::Piece_Type::Raaja)
@@ -149,7 +174,7 @@ void Controller::WaitForConnection()
 {
 	if (server)
 	{
-		ShowSpinner();
+		ShowSpinner("WAITING FOR CONNECTION", true);
 		if (server->IsClientConnected())
 		{
 			std::cout << "Client Successfully Connected To Server!" << std::endl;
@@ -166,11 +191,14 @@ void Controller::WaitForConnection()
 	}
 }
 
-void Controller::ShowSpinner()
+void Controller::ShowSpinner(const std::string s, bool background)
 {
 	static bool use_work_area = true;
 	static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiConfigFlags_NavEnableKeyboard;
-
+	if (background == false)
+	{
+		flags |= ImGuiWindowFlags_NoBackground;
+	}
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
 	ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
@@ -181,8 +209,8 @@ void Controller::ShowSpinner()
 		float windowWidth = ImGui::GetWindowWidth();
 		float windowCenterX = ImGui::GetWindowPos().x + windowWidth * 0.5f;
 
-		ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcTextSize("WAITING FOR CONNECTION...").x * 0.5f, ImGui::GetWindowHeight() / 2.0 - 50.0f));
-		ImGui::Text("WAITING FOR CONNECTION...");
+		ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcTextSize(s.c_str()).x * 0.5f, ImGui::GetWindowHeight() / 2.0 - 50.0f));
+		ImGui::Text("%s", s.c_str());
 
 		float angle = ImGui::GetTime() * 2.0f * 3.1415926f; // 2.0f to control rotation speed
 
@@ -200,6 +228,69 @@ void Controller::ShowSpinner()
 	ImGui::End();
 }
 
+void Controller::ShowPromotionWindow(sf::Vector2f position)
+{
+	ImGui::SetNextWindowSize(ImVec2(120, 125)); // Set the window size
+	ImGui::SetNextWindowPos(position); // Set the window position
+	ImGui::Begin("Promote Pawn", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+	std::string PromoteType = Global::GetStringFromPieceType(Global::Piece_Type::Pyada);
+	//PROMOTE 7,2 to Wazir
+	std::string PromoteMessage = "PROMOTE " + std::to_string(T_clickedTile->getGamePosition().x) + "," + std::to_string(T_clickedTile->getGamePosition().y) + " to ";
+	if (ImGui::Button("Wazir"))
+	{
+		//Handle promotion to Queen
+		std::unique_ptr<Command> promoteCommand = std::make_unique<PromoteCommand>(model, T_clickedTile->getGamePosition(), Global::Piece_Type::Wazir);
+		model.executeCommand(std::move(promoteCommand));
+		gameState = GameState::PlayGame;
+
+		PromoteType = Global::GetStringFromPieceType(Global::Piece_Type::Wazir);
+	}
+
+	if (ImGui::Button("Haanthi"))
+	{
+		std::unique_ptr<Command> promoteCommand = std::make_unique<PromoteCommand>(model, T_clickedTile->getGamePosition(), Global::Piece_Type::Haanthi);
+		model.executeCommand(std::move(promoteCommand));
+		gameState = GameState::PlayGame;
+
+		PromoteType = Global::GetStringFromPieceType(Global::Piece_Type::Haanthi);
+	}
+
+	if (ImGui::Button("Unth"))
+	{
+		// Handle promotion to Bishop
+		std::unique_ptr<Command> promoteCommand = std::make_unique<PromoteCommand>(model, T_clickedTile->getGamePosition(), Global::Piece_Type::Unth);
+		model.executeCommand(std::move(promoteCommand));
+		gameState = GameState::PlayGame;
+
+		PromoteType = Global::GetStringFromPieceType(Global::Piece_Type::Unth);
+	}
+
+	if (ImGui::Button("Ghoda"))
+	{
+		// Handle promotion to Knight
+		std::unique_ptr<Command> promoteCommand = std::make_unique<PromoteCommand>(model, T_clickedTile->getGamePosition(), Global::Piece_Type::Ghoda);
+		model.executeCommand(std::move(promoteCommand));
+		gameState = GameState::PlayGame;
+
+		PromoteType = Global::GetStringFromPieceType(Global::Piece_Type::Ghoda);
+	}
+	PromoteMessage += PromoteType;
+	//if (PromoteType != "Pyada")
+	//{
+	//	std::cout << PromoteMessage << std::endl;
+	//}
+	if (server && PromoteType != "Pyada" || client && PromoteType != "Pyada")
+	{
+		std::cout << "Sending Message" << PromoteMessage << std::endl;
+		if (server)
+			server->sendMessage(PromoteMessage);
+		if (client)
+			client->sendMessage(PromoteMessage);
+	}
+	ImGui::End();
+}
+
 void Controller::ResetTiles()
 {
 	if (lastClickedPiece)
@@ -213,6 +304,14 @@ void Controller::ResetTiles()
 			tile.setNormalTexture();
 		}
 	}
+}
+
+//Example : "MOVE from 7,1 to 5,2"
+std::string Controller::GenerateMoveString(sf::Vector2i from, sf::Vector2i to)
+{
+	std::string s;
+	s += "MOVE from " + std::to_string(from.x) + "," + std::to_string(from.y) + " to " + std::to_string(to.x) + "," + std::to_string(to.y);
+	return s;
 }
 
 void Controller::PreventDuplicateClicks(int rowIndex, int columnIndex, bool& retFlag)
@@ -271,7 +370,20 @@ void Controller::RunGame()
 			WaitForConnection();
 			break;
 		case GameState::PlayGame:
+			if (model.changePlayer == true)
+			{
+				ChangePlayer();
+				model.changePlayer = false;
+				if (lastClickedPiece)
+				{
+					lastClickedPiece->DeselectPiece();
+				}
+				ResetTiles();
+			}
 			ShowPlayGameScreen(undoKeyPressed, redoKeyPressed, window);
+			break;
+		case GameState::ShowPromotion:
+			ShowPromotionWindow(promotionWindowPosition);
 			break;
 		case GameState::Pause:
 			showPauseOrPlayButton();
@@ -337,7 +449,7 @@ void Controller::ShowMainMenu(bool& showOnlineOption)
 			ImGui::SetCursorPosX((windowCenterX - addresswidth) * 0.5f);
 			ImGui::PushItemWidth(addresswidth);
 			ImGui::SetCursorPos(ImVec2(windowCenterX - ImGui::CalcItemWidth() * 0.5f, ImGui::GetCursorPosY()));
-			static char address[128];
+			static char address[128] = "127.0.0.1";
 			ImGui::InputText("Address", address, sizeof(address));
 
 			//port
@@ -384,9 +496,31 @@ void Controller::ShowMainMenu(bool& showOnlineOption)
 	ImGui::End();
 }
 
+void Controller::CheckImGuiHover()
+{
+	// Check if the mouse is hovering over any ImGui window
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
+	{
+		hoveringGui = true;
+	}
+	else
+	{
+		hoveringGui = false;
+	}
+}
 void Controller::ShowPlayGameScreen(bool& undoKeyPressed, bool& redoKeyPressed, sf::RenderWindow& window)
 {
 	showPauseOrPlayButton();
+	if (server && currentPlayer->getColor() != Global::Color::white)
+	{
+		ShowSpinner("WAITING FOR BLACK's MOVE", false);
+	}
+	if (client && currentPlayer->getColor() != Global::Color::black)
+	{
+		ShowSpinner("WAITING FOR WHITE's MOVE", false);
+	}
+	if (hoveringGui)
+		return;
 	bool isKingCheck = currentPlayer->isInCheck();
 	auto validMoves = currentPlayer->getValidMoves();
 	if (validMoves.size() <= 0)
@@ -398,6 +532,14 @@ void Controller::ShowPlayGameScreen(bool& undoKeyPressed, bool& redoKeyPressed, 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z) && !undoKeyPressed)
 	{
 		std::cout << "Pressed Undo key" << std::endl;
+		if (server)
+		{
+			server->sendMessage("UNDO");
+		}
+		if (client)
+		{
+			client->sendMessage("UNDO");
+		}
 		model.undoLastCommand();
 		ChangePlayer();
 		undoKeyPressed = true;
@@ -410,6 +552,14 @@ void Controller::ShowPlayGameScreen(bool& undoKeyPressed, bool& redoKeyPressed, 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::R) && !redoKeyPressed)
 	{
 		std::cout << "Pressed Redo key" << std::endl;
+		if (server)
+		{
+			server->sendMessage("REDO");
+		}
+		if (client)
+		{
+			client->sendMessage("REDO");
+		}
 		model.redoCommand();
 		ChangePlayer();
 		redoKeyPressed = true;
@@ -422,9 +572,8 @@ void Controller::ShowPlayGameScreen(bool& undoKeyPressed, bool& redoKeyPressed, 
 	ShowUndoAndRedoButtons(window);
 	ShowTurnText(window);
 
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 	ImGui::End();
-
 	HandleInput(window, isKingCheck);
 }
 
@@ -464,12 +613,28 @@ void Controller::ShowUndoAndRedoButtons(sf::RenderWindow& window)
 
 	if (ImGui::Button("UNDO"))
 	{
+		if (server)
+		{
+			server->sendMessage("UNDO");
+		}
+		if (client)
+		{
+			client->sendMessage("UNDO");
+		}
 		model.undoLastCommand();
 		ChangePlayer();
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("REDO"))
 	{
+		if (server)
+		{
+			server->sendMessage("REDO");
+		}
+		if (client)
+		{
+			client->sendMessage("REDO");
+		}
 		model.redoCommand();
 		ChangePlayer();
 	}

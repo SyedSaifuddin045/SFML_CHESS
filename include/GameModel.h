@@ -5,6 +5,7 @@
 #include <Tile.h>
 #include <PieceFactory.h>
 #include <MoveCommand.h>
+#include <PromoteCommand.h>
 
 namespace std {
 	template<>
@@ -45,6 +46,7 @@ public:
 	std::shared_ptr<sf::Texture> WhiteHighlightTexture;
 	std::shared_ptr<sf::Texture> BlackHighlightTexture;
 	friend Player;
+	bool changePlayer;
 private:
 	std::vector<std::vector<Tile>> Board;
 	std::unordered_map<sf::Vector2i, std::shared_ptr<Piece>> positionsOccupiedOnBoard;

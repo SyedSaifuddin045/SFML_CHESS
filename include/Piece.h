@@ -107,6 +107,8 @@ public:
 	void setUseShader(bool b);
 	void setPosition(sf::Vector2f Position);
 
+
+	sf::Vector2f getScreenPosition() { return p_Body.getPosition(); }
 	bool isPieceSelected();
 	void DeselectPiece();
 	void pieceToggleSelection();

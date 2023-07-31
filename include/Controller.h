@@ -10,7 +10,7 @@
 #include <Client.h>
 
 enum class GameState{
-	MainMenu,WaitingForConnection, PlayGame, Pause, End
+	MainMenu,WaitingForConnection, PlayGame,ShowPromotion, Pause, End
 };
 
 class  Controller
@@ -21,6 +21,7 @@ public:
 	void TogglePiece(std::shared_ptr<Piece> clickedPiece, sf::Vector2i pos);
 	void HandleInput(sf::RenderWindow& window,bool isKingCheck);
 	void ResetTiles();
+	std::string GenerateMoveString(sf::Vector2i from, sf::Vector2i to);
 	void PreventDuplicateClicks(int rowIndex, int columnIndex, bool& retFlag);
 	~Controller();
 	void CloseGame();
@@ -36,7 +37,9 @@ public:
 	void CreateServer(unsigned short port);
 	void CreateClient(const char* address, unsigned short port);
 	void WaitForConnection();
-	void ShowSpinner();
+	void ShowSpinner(const std::string s, bool background);
+	void ShowPromotionWindow(sf::Vector2f position);
+	void CheckImGuiHover();
 private:
 	GameModel model;
 	View view;
@@ -52,8 +55,12 @@ private:
 	bool isPaused;
 	bool checkMate;
 	GameState gameState;
+	bool showPromotionWindow;
+	sf::Vector2f promotionWindowPosition;
 
+	Tile* T_clickedTile;
 	bool playOnline;
 	Client* client;
 	Server* server;
+	bool hoveringGui;
 };
