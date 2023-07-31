@@ -1,5 +1,6 @@
 #include <Controller.h>
 #include <Log.h>
+#include <math.h>
 
 Controller::Controller(int height, int width, const sf::String& title)
 	:view(sf::VideoMode(width, height), title), model(), WhitePlayer(sf::Vector2i(7, 4), model), BlackPlayer(sf::Vector2i(0, 4), model)
